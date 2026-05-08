@@ -214,3 +214,17 @@ redis-cli --latency
 - TTL debe ser setteado en todas las keys para evitar memory leaks
 - Connection pooling: max 50 connections por cliente
 - Streams para jobs queue (no usar Redis Lists para queues nuevos)
+
+---
+
+## Alternativas Open Source
+
+| Opción | Ventajas | Notes |
+|--------|----------|-------|
+| **Valkey** (elegido) | 100% compatible con Redis, fork del equipo original (Linux Foundation), sin licencia RSAL | Drop-in replacement — cambiar el binary es suficiente |
+| **Dragonfly** | Más paralelo que Redis, mejor para cloud native, GPL | Más nuevo, menos madurez |
+| **Memcached** | Muy simple, sin persistencia, bajo footprint | Solo para cache simple sin cluster |
+
+**Decisión**: **Valkey** como reemplazo directo de Redis. Mismo protocolo, misma CLI, mismo rendimiento — pero sin las restricciones de licencia. Migration: 0 cambios en aplicación, solo cambiar imagen del contenedor.
+
+**Nota de licencia**: Redis cambió a Redis Source Available License (RSAL) en 2024. Valkey (Linux Foundation) es el fork open source mantenido por la comunidad y los mismos autores originales de Redis.

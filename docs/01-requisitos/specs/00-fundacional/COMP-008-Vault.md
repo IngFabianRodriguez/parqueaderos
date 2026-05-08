@@ -314,3 +314,20 @@ Todos los accesos a secretos se registran en audit log:
 - Secrets nunca se muestran en logs (***redacted***)
 - Emergency unseal: 3 de 5 keys necessary
 - Migration: Soporte para移行 from env vars a Vault gradual
+
+---
+
+## Alternativas Open Source
+
+| Opción | Ventajas | Notes |
+|--------|----------|-------|
+| **HashiCorp Vault** (elegido) | Maduro, KV v2, PKI, Database dynamic secrets, Kubernetes auth | Para equipos con experiencia en Vault |
+| **ESOPS Secrets Operator** |-native Kubernetes, injection directa en pods | Más simple si solo necesitas secretos en K8s |
+| **External Secrets Operator** | Sincroniza desde AWS SM / GCP SM / Vault | Ideal si ya usas cloud managed secrets |
+| **CyberArk Conjur** | Enterprise-grade, PCI-DSS nativo | Si hay requisitos regulatorios estrictos |
+| **Sealed Secrets** | Cifrado con clave pública del cluster, ningún secreto en Git | Bueno para GitOps |
+| **Kubernetes Secrets (baseline)** | Nativo de K8s, sin componentes extra | Aceptable para empezar — no para producción |
+
+**Decisión**: **External Secrets Operator + el managed secrets del cloud** (AWS Secrets Manager / GCP Secret Manager) para la mayoría de deployments. Si el cliente quiere 100% on-prem sin cloud, usar **HashiCorp Vault** con auto-unseal via AWS KMS / GCP KMS.
+
+**Ventaja de External Secrets Operator**: los secretos nunca viven en el cluster como texto plano — se sincronizan del cloud provider y el operator los inyecta en los pods via Kubernetes Secrets native.

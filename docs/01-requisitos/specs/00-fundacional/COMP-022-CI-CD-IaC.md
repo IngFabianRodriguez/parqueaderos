@@ -310,3 +310,19 @@ CODEMAGIC_API_KEY    # Para trigger builds iOS
 - **Lead time**: < 30 min desde commit hasta producción
 - **MTTR**: < 15 min para rollback
 - **Change failure rate**: < 5% de deploys requieren rollback
+
+---
+
+## Alternativas Open Source
+
+| Opción | Ventajas | Notes |
+|--------|----------|-------|
+| **Jenkins** (elegido) | Open source, plugins riches, control total | Infra propia, mayor mantenimiento |
+| **GitLab CI** | Integrado con GitLab, YAML declarativo, muy usado | Si mueves el repo a GitLab |
+| **Drone.io** | Docker-based, simple, open source | Bueno para equipos pequeños |
+| **Apache Buildstream** | Builds reproducibles, más complejo | Solo si necesitas builds muy controlados |
+| **GitHub Actions** | Runner gratuito para open source,SaaS | Proprietary pero gratis para pública |
+
+**Decisión**: **Jenkins** como default para CI/CD auto-hostado. Si el cliente ya usa GitLab, migrar a GitLab CI es trivial (solo cambiar el repo y reescribir los YAMLs). El workflow YAML es casi idéntico.
+
+**Runner self-hosted**: Configurar 2-3 agentes Jenkins on VM para empezar. Escalar añadiendo nodos según demanda de builds.

@@ -134,3 +134,16 @@ curl -s https://api.parkcore.io/metrics
 - Todas las respuestas de error siguen formato: `{ "error": "code", "message": "human readable", "trace_id": "..." }`
 - El gateway NO modifica el body de las respuestas upstream
 - Health check: `GET /health` retorna `{ "status": "ok", "services": {...} }`
+
+---
+
+## Alternativas Open Source
+
+| Opción | Ventajas | Notes |
+|--------|----------|-------|
+| **Kong** (elegido) | Amplia comunidad, plugins ricos, Apache 2.0 | - |
+| **Apache APISIX** | Más moderno, mejor performance, Apache 2.0 | Buena alternativa si Kong se siente pesado |
+| **Tyk** | Open source, rate limiting avanzado | GraphQL support nativo |
+| **Gloo Edge** | Solo.io, muy flexible, Apache 2.0 | Mejor para microservicios con gRPC |
+
+**Decisión**: Kong como default por madurez y ecosistema. Apache APISIX como backup si se necesitan características más modernas.

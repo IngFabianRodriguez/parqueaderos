@@ -282,3 +282,17 @@ aws s3api get-object-tagging --bucket bucket-name --key path/to/file
 - Multipart para archivos > 50MB
 - La idempotencia se logra con la key (no con ETag) — key única por objeto
 - Para backups, comprimir + encryptar localmente antes de subir
+
+---
+
+## Alternativas Open Source
+
+| Opción | Ventajas | Notes |
+|--------|----------|-------|
+| **MinIO** (elegido) | S3-compatible, Apache 2.0, el estándar de facto para on-prem | Mismo API que AWS S3, migration trivial |
+| **Ceph RGW** | Más completo (RADOS + Block + Object), pero complejo | Si ya usas Ceph en infra |
+| **OpenStack Swift** | Compatible con API Swift, no S3 | Solo si ya tienes OpenStack |
+
+**Decisión**: **MinIO** para storage on-prem. Compatible 100% con el SDK de AWS S3 que ya usamos en los servicios — solo cambiar el endpoint, credenciales y region.
+
+**Si usas cloud**: AWS S3 / GCS / Azure Blob Store siguen siendo opciones válidas si el cliente quiere managed.
