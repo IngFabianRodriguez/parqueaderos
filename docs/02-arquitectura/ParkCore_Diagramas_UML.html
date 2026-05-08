@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ParkCore — Diagramas UML</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #161625;
+      --border: #2a2a4a;
+      --text: #e0e0f0;
+      --muted: #8080a0;
+      --accent: #4fc3f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    /* TOC */
+    nav {
+      max-width: 900px;
+      margin: 0 auto 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+    }
+    nav a {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    nav a:hover {
+      background: #1e1e35;
+      border-color: var(--accent);
+    }
+
+    /* Diagram cards */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .card-header .badge {
+      background: var(--accent);
+      color: #000;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .card-header h2 {
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .card-header p {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .mermaid {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      background: #0f0f1a;
+      min-height: 200px;
+    }
+
+    .mermaid svg {
+      max-width: 100%;
+    }
+
+    hr.section {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🏗️ ParkCore — Diagramas UML</h1>
+<p class="subtitle">Plataforma de gestión de parqueaderos — 9 diagramas renderizados con Mermaid</p>
+
+<nav>
+  <a href="#01">01 — Casos de Uso</a>
+  <a href="#02">02 — Clases</a>
+  <a href="#03">03 — Objetos</a>
+  <a href="#04">04 — Componentes</a>
+  <a href="#05">05 — Despliegue</a>
+  <a href="#06">06 — Secuencia</a>
+  <a href="#07">07 — Actividades</a>
+  <a href="#08">08 — Estados</a>
+  <a href="#09">09 — Temporal</a>
+</nav>
+
+<div class="container">
+
+  <!-- 01 -->
+  <div class="card" id="01">
+    <div class="card-header">
+      <span class="badge">01</span>
+      <h2>Casos de Uso</h2>
+      <p>Actores y UC — 5 actores, 12 casos de uso</p>
+    </div>
+    <div class="mermaid">
+flowchart LR
+    %% — Estilos —
+    style Clientes fill:#1b2a1b,stroke:#4a7c43,color:#e0e0f0
+    style Pagos fill:#2a1b1b,stroke:#8e3a3a,color:#e0e0f0
+    style Admin fill:#1b1b2a,stroke:#3a3a8e,color:#e0e0f0
+    style Consultas fill:#2a2a1b,stroke:#8e8a3a,color:#e0e0f0
+
+    subgraph Clientes["👤 Clientes"]
+        direction TB
+        UC1["Consultar disponibilidad"]
+        UC2["Registrar entrada (ANPR)"]
+        UC3["Registrar salida (ANPR)"]
+        UC4["Realizar pago"]
+        UC11["Recibir notificaciones"]
+    end
+
+    subgraph Pagos["💳 Pagos"]
+        direction TB
+        UC5["Validar pago"]
+    end
+
+    subgraph Admin["⚙️ Administración"]
+        direction TB
+        UC6["Abrir talanquera"]
+        UC7["Gestionar tarifas"]
+        UC8["Bloquear placa moroso"]
+        UC9["Ver dashboard consolidado"]
+        UC10["Gestionar usuarios y roles"]
+    end
+
+    subgraph Consultas["🔍 Consultas"]
+        direction TB
+        UC12["Consultar historial por placa"]
+    end
+
+    %% — Actores —
+    Cliente([🧑 Cliente])
+    Operador([👷 Operador])
+    AdminSede([🏢 Admin Sede])
+    AdminGlobal([🌐 Admin Global])
+    ANPR([📷 Sistema ANPR])
+
+    %% — Relaciones —
+    Cliente --> UC1
+    Cliente --> UC2
+    Cliente --> UC3
+    Cliente --> UC4
+    Cliente --> UC11
+
+    Operador --> UC1
+    Operador --> UC6
+    Operador --> UC7
+
+    AdminSede --> UC7
+    AdminSede --> UC8
+    AdminSede --> UC9
+    AdminSede --> UC10
+
+    AdminGlobal --> UC9
+    AdminGlobal --> UC10
+
+    ANPR --> UC2
+    ANPR --> UC3
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="card" id="02">
+    <div class="card-header">
+      <span class="badge">02</span>
+      <h2>Modelo de Clases</h2>
+      <p>13 clases con atributos, métodos y relaciones</p>
+    </div>
+    <div class="mermaid">
+classDiagram
+    direction TB
+    direction RL
+
+    %% — Dominio: Sede —
+    class Sede {
+        -String idSede
+        -String nombre
+        -String direccion
+        -String ciudad
+        -Integer capacidadTotal
+        -Boolean activa
+        +consultarDisponibilidad() Integer
+        +agregarZona(zona) void
+        +obtenerZonas() List~Zona~
+    }
+
+    class Zona {
+        -String idZona
+        -String nombre
+        -TipoZona tipo
+        -Integer capacidad
+        +obtenerEspacios() List~Espacio~
+        +contarDisponibles() Integer
+    }
+
+    class Espacio {
+        -String idEspacio
+        -String codigo
+        -EstadoEspacio estado
+        +ocupar() void
+        +liberar() void
+    }
+
+    %% — Dominio: Vehículos —
+    class Vehiculo {
+        -String placa
+        -String marca
+        -String modelo
+        -Boolean bloqueado
+        +isBloqueado() Boolean
+    }
+
+    class RegistroEntrada {
+        -DateTime fechaHoraEntrada
+        -String imagenPlaca
+        +registrar() void
+    }
+
+    class RegistroSalida {
+        -DateTime fechaHoraSalida
+        -Integer duracionMinutos
+        +calcularDuracion() Integer
+        +registrar() void
+    }
+
+    %% — Dominio: Pagos —
+    class Pago {
+        -BigDecimal monto
+        -MetodoPago metodo
+        -EstadoPago estado
+        -DateTime fechaPago
+        +confirmar() Boolean
+    }
+
+    class PlanTarifario {
+        -BigDecimal precioBase
+        -BigDecimal precioPorMinuto
+        -TipoPlan tipo
+        +calcularMonto(duracionMinutos) BigDecimal
+    }
+
+    %% — Dominio: Clientes —
+    class Cliente {
+        -String nombre
+        -String telefono
+        -String email
+        +agregarVehiculo(vehiculo) void
+        +realizarPago(pago) void
+    }
+
+    %% — Dominio: Dispositivos —
+    class Talanquera {
+        -TipoTalanquera tipo
+        -String ipDispositivo
+        -EstadoTalanquera estado
+        +abrir() Boolean
+        +cerrar() void
+        +enviarSenialApertura() void
+    }
+
+    class Notificacion {
+        -TipoNotificacion tipo
+        -String mensaje
+        -DateTime fechaEnvio
+        +enviar() void
+        +marcarLeida() void
+    }
+
+    %% — Dominio: Auth —
+    class Usuario {
+        -String nombre
+        -String username
+        -Boolean activo
+        +autenticar(password) Boolean
+        +tienePermiso(permiso) Boolean
+    }
+
+    class Rol {
+        -String nombre
+        -List~String~ permisos
+        +agregarPermiso(permiso) void
+        +tienePermiso(permiso) Boolean
+    }
+
+    %% — Relaciones —
+    Sede "1" *-- "1..n" Zona : tiene
+    Zona "1" *-- "1..n" Espacio : contiene
+    Sede "1" *-- "0..n" RegistroEntrada : registra
+    RegistroEntrada "1" --> "1" Vehiculo : pertenece
+    RegistroSalida "1" --> "1" RegistroEntrada : cierra
+    RegistroEntrada "1" --> "0..1" Pago : genera
+    Cliente "1" *-- "0..n" Vehiculo : posee
+    Cliente "1" --> "0..n" Pago : realiza
+    PlanTarifario "1" --> "0..n" Sede : aplica a
+    RegistroEntrada "1" --> "0..1" Espacio : ocupa
+    Talanquera "1" --> "0..1" Sede : pertenece
+    Usuario "1" --> "1" Rol : tiene rol
+    Usuario "1" --> "0..1" Sede : administra
+    Notificacion "1" --> "0..1" Cliente : envia a
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="card" id="03">
+    <div class="card-header">
+      <span class="badge">03</span>
+      <h2>Diagrama de Objetos</h2>
+      <p>Escenario concreto — Vehículo ABC-123</p>
+    </div>
+    <div class="mermaid">
+classDiagram
+    direction TB
+
+    class sedeCentro {
+        idSede = "S001"
+        nombre = "Parqueadero Centro"
+        direccion = "Av. Principal 123"
+        ciudad = "Bogotá"
+        capacidadTotal = 200
+    }
+
+    class zonaA {
+        idZona = "Z001"
+        nombre = "Zona A — Cubierta"
+        tipo = "CUBIERTA"
+        capacidad = 100
+    }
+
+    class espacio12 {
+        idEspacio = "E012"
+        codigo = "A-12"
+        estado = "OCUPADO"
+    }
+
+    class vehiculoABC123 {
+        idVehiculo = "V001"
+        placa = "ABC-123"
+        marca = "Toyota"
+        modelo = "Corolla"
+        bloqueado = false
+    }
+
+    class regEntrada1 {
+        idRegistro = "RE001"
+        fechaHoraEntrada = "2026-05-07 10:30"
+        imagenPlaca = "re001_placa.jpg"
+    }
+
+    class pago001 {
+        idPago = "P001"
+        monto = 15000.00
+        metodo = "TARJETA_CREDITO"
+        estado = "CONFIRMADO"
+    }
+
+    class talanquera1 {
+        idTalanquera = "T001"
+        tipo = "ENTRADA"
+        ipDispositivo = "192.168.1.101"
+        estado = "CERRADO"
+    }
+
+    class clienteJuan {
+        idCliente = "C001"
+        nombre = "Juan Pérez"
+        telefono = "+57 300 123 4567"
+    }
+
+    sedeCentro *-- zonaA : tiene
+    zonaA *-- espacio12 : contiene
+    espacio12 ..> vehiculoABC123 : ocupado por
+    regEntrada1 --> vehiculoABC123 : registra
+    regEntrada1 --> espacio12 : asigna
+    regEntrada1 --> sedeCentro : registrado en
+    pago001 --> regEntrada1 : corresponde a
+    pago001 --> clienteJuan : realizado por
+    talanquera1 --> sedeCentro : pertenece a
+    clienteJuan ..> vehiculoABC123 : posee
+
+    note for sedeCentro "Escenario: Juan llega con Toyota ABC-123.\nRegistra entrada en A-12. Paga $15.000.\nLa talanquera abre y sale."
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="card" id="04">
+    <div class="card-header">
+      <span class="badge">04</span>
+      <h2>Arquitectura de Componentes</h2>
+      <p>Arquitectura por capas — Presentación, Negocio, Datos, IoT</p>
+    </div>
+    <div class="mermaid">
+flowchart LR
+    %% Estilos
+    style CapaPresentacion fill:#1b2a1b,stroke:#4a7c43,color:#e0e0f0
+    style CapaNegocio fill:#1b1b2a,stroke:#3a3a8e,color:#e0e0f0
+    style CapaDatos fill:#2a1b1b,stroke:#8e3a3a,color:#e0e0f0
+    style DispositivosIoT fill:#1b2a2a,stroke:#3a6e8e,color:#e0e0f0
+
+    subgraph CapaPresentacion["🔲 Capa de Presentación"]
+        direction TB
+        ClienteWeb["🌐 ClienteWeb"]
+        AppMovil["📱 AppMovil"]
+    end
+
+    subgraph CapaNegocio["⚙️ Capa de Negocio"]
+        direction LR
+        APIGateway["🔐 APIGateway"]
+        ServicioANPR["📷 Servicio ANPR"]
+        ServicioDisp["📊 Servicio Disponibilidad"]
+        ServicioPagos["💳 Servicio Pagos"]
+        ServicioTalq["🚧 Servicio Talanquera"]
+        ServicioNotif["🔔 Servicio Notificaciones"]
+    end
+
+    subgraph CapaDatos["💾 Capa de Datos"]
+        direction LR
+        Postgres["🗄️ PostgreSQL"]
+        Redis["⚡ Redis Cache"]
+        MQTT["📡 Broker MQTT"]
+    end
+
+    subgraph DispositivosIoT["📡 Dispositivos IoT"]
+        direction LR
+        Camara["📷 Cámara ANPR"]
+        Talq["🚧 Talanquera Electrónica"]
+        Sensores["📊 Sensores Ocupación"]
+        EdgeGW["🌐 Gateway MQTT Local"]
+    end
+
+    %% Flechas: Presentación → Negocio
+    ClienteWeb --> APIGateway : HTTPS REST
+    AppMovil --> APIGateway : HTTPS REST
+
+    %% Flechas: Negocio → Negocio
+    APIGateway --> ServicioANPR : gRPC
+    APIGateway --> ServicioDisp : REST
+    APIGateway --> ServicioPagos : REST
+    APIGateway --> ServicioTalq : MQTT
+    APIGateway --> ServicioNotif : REST
+
+    %% Flechas: Negocio → Datos
+    APIGateway --> Postgres : JDBC
+    APIGateway --> Redis : Redis
+    ServicioPagos --> MQTT : Publish
+    ServicioTalq --> MQTT : Subscribe
+    ServicioNotif --> MQTT : Publish
+
+    %% Flechas: IoT → edge → cloud
+    ServicioANPR -.-> Camara : RTSP
+    ServicioDisp -.-> Sensores : HTTP
+    MQTT -.-> EdgeGW : MQTT Bridge
+    EdgeGW --> Camara : RTSP
+    EdgeGW --> Talq : Modbus
+    EdgeGW --> Sensores : HTTP
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="card" id="05">
+    <div class="card-header">
+      <span class="badge">05</span>
+      <h2>Diagrama de Despliegue</h2>
+      <p>Infraestructura — Nodos, artefactos y comunicación</p>
+    </div>
+    <div class="mermaid">
+flowchart TB
+    style Clientes fill:#1b2a1b,stroke:#4a7c43,color:#fff
+    style Servidores fill:#1b1b2a,stroke:#3a3a8e,color:#fff
+    style Datos fill:#2a1b1b,stroke:#8e3a3a,color:#fff
+    style IoT fill:#1b2a2a,stroke:#3a6e8e,color:#fff
+
+    subgraph Clientes["🖥️ Clientes"]
+        direction LR
+        Browser["🌐 Navegador Web\nChrome/Firefox\nSPA Frontend"]
+        AppMovil["📱 App Móvil\niOS / Android"]
+    end
+
+    subgraph Servidores["🖧 Servidores — Docker / K8s"]
+        direction LR
+        API["🔐 APIGateway\nNode.js"]
+        Microserv["⚙️ Microservicios\nNode.js / Python"]
+        ANPR["📷 ANPR Service\nPython / TensorFlow"]
+    end
+
+    subgraph Datos["💾 Capa de Datos"]
+        direction LR
+        Postgres["🗄️ PostgreSQL\nAWS RDS\nParkCore_DB"]
+        Redis["⚡ Redis\nElastiCache\nSessions / Cache"]
+        Mosquitto["📡 Mosquitto\nBroker MQTT"]
+    end
+
+    subgraph IoT["📡 Dispositivos en Sede"]
+        direction LR
+        CamIP["📷 Cámara IP\nANPR"]
+        TalqPLC["🚧 Talanquera\nPLC"]
+        Sens["📊 Sensores IoT"]
+        Edge["🌐 Edge Gateway\nMQTT Bridge"]
+    end
+
+    Browser -->|HTTPS / WSS| API
+    AppMovil -->|HTTPS / MQTT| API
+    API -->|gRPC / REST| Microserv
+    API -->|gRPC| ANPR
+    Microserv -->|JDBC| Postgres
+    Microserv -->|Redis| Redis
+    API -->|MQTT| Mosquitto
+    Mosquitto -.->|MQTT| Edge
+    Edge -->|RTSP| CamIP
+    Edge -->|Modbus| TalqPLC
+    Edge -->|HTTP| Sens
+    ANPR -.->|RTSP| CamIP : streaming
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="card" id="06">
+    <div class="card-header">
+      <span class="badge">06</span>
+      <h2>Diagrama de Secuencia</h2>
+      <p>Flujo entrada → pago → salida completo</p>
+    </div>
+    <div class="mermaid">
+sequenceDiagram
+    participant Cliente
+    participant ANPR
+    participant Sistema
+    participant DB as Base Datos
+    participant Talq as Talanquera
+
+    rect rgb(20, 50, 20)
+        note over Cliente,Talq: FASE 1 — ENTRADA
+        Cliente->>+ANPR: Vehículo llega
+        ANPR->>ANPR: Detecta movimiento
+        par
+            ANPR->>ANPR: Captura imagen placa
+            ANPR->>ANPR: OCR → "ABC-123"
+        end
+        ANPR-->>+Sistema: Placa "ABC-123"
+        Sistema->>+DB: Buscar vehículo
+        DB-->>-Sistema: Nuevo cliente
+        Sistema->>+DB: Registrar entrada RE-001
+        DB-->>-Sistema: OK
+        Sistema->>+DB: Asignar espacio A-12
+        DB-->>-Sistema: E012 → OCUPADO
+        Sistema->>+DB: Actualizar dashboard
+        DB-->>-Sistema: OK
+        Sistema-->>-Cliente: Confirmado — Espacio A-12
+        Sistema-->>+Talq: Señal abrir (MQTT)
+        Talq->>Talq: Abre barrera
+        Talq-->>-Cliente: Barrera levantada
+        Cliente->>Cliente: Estaciona
+    end
+
+    rect rgb(50, 20, 20)
+        note over Cliente,Sistema: FASE 2 — PAGO
+        Cliente->>+Sistema: Solicita pago
+        Sistema->>Sistema: Calcula tarifa
+        Sistema-->>Cliente: $15.000 a pagar
+        Cliente->>+Sistema: Confirma
+        Sistema->>Sistema: Procesa pasarela
+        Sistema->>+DB: Registrar pago P-001
+        DB-->>-Sistema: CONFIRMADO
+        Sistema-->>-Cliente: Pago exitoso ✓
+    end
+
+    rect rgb(20, 20, 50)
+        note over Cliente,Talq: FASE 3 — SALIDA
+        Cliente->>+ANPR: Llega a salida
+        ANPR->>ANPR: Captura placa
+        ANPR->>ANPR: OCR → "ABC-123"
+        ANPR-->>+Sistema: Placa
+        Sistema->>+DB: Buscar RE activo
+        DB-->>-Sistema: RE-001
+        Sistema->>+DB: Verificar pago
+        DB-->>-Sistema: P-001 CONFIRMADO ✓
+        Sistema->>+DB: Registrar salida RS-001
+        DB-->>-Sistema: OK
+        Sistema->>+DB: Liberar E012 → DISPONIBLE
+        DB-->>-Sistema: OK
+        Sistema-->>-Talq: Señal abrir (MQTT)
+        Talq->>Talq: Abre barrera
+        Talq-->>Cliente: Barrera levantada
+        Cliente->>Cliente: Sale
+    end
+    </div>
+  </div>
+
+  <!-- 07 -->
+  <div class="card" id="07">
+    <div class="card-header">
+      <span class="badge">07</span>
+      <h2>Diagrama de Actividades</h2>
+      <p>Flujo completo de entrada, pago y salida</p>
+    </div>
+    <div class="mermaid">
+stateDiagram-v2
+    direction TB
+    [*] --> Entrada
+
+    state Entrada {
+        direction LR
+        [*] --> DetectandoVehiculo
+        DetectandoVehiculo --> PlacaLeida: OCR exitoso
+        PlacaLeida --> AbriendoTalanquera: Espacio asignado
+        AbriendoTalanquera --> Estacionado: Dentro
+        PlacaLeida --> NegarEntrada: Vehículo bloqueado
+        NegarEntrada --> [*]
+    }
+
+    Entrada --> Pagando: Estacionado
+
+    state Pagando {
+        direction LR
+        [*] --> SolicitarMonto
+        SolicitarMonto --> Procesando: Cliente confirma
+        Procesando --> Exitoso: Aprobado
+        Procesando --> Fallido: Rechazado
+        Fallido --> SolicitarMonto: Reintentar
+        Exitoso --> [*]: Confirmado
+    }
+
+    Pagando --> AbriendoTalanqueraSalida: Pagado
+    AbriendoTalanqueraSalida --> RegistroSalida: Barrera abierta
+    RegistroSalida --> ActualizarEspacio: Liberar E012
+    ActualizarEspacio --> [*]: Fin
+    </div>
+  </div>
+
+  <!-- 08 -->
+  <div class="card" id="08">
+    <div class="card-header">
+      <span class="badge">08</span>
+      <h2>Diagrama de Estados</h2>
+      <p>Ciclo de vida del vehículo en el parqueadero</p>
+    </div>
+    <div class="mermaid">
+stateDiagram-v2
+    direction TB
+
+    [*] --> Fuera
+
+    Fuera --> EntradaDetectada: Sensor detecta
+    EntradaDetectada --> PlacaVerificada: OCR exitoso
+    PlacaVerificada --> AsignandoEspacio: BD consultada
+
+    AsignandoEspacio --> AbriendoTalanquera: Espacio OK
+    AsignandoEspacio --> Fuera: Parqueadero lleno
+
+    AbriendoTalanquera --> Estacionado: Vehículo dentro
+
+    state Estacionado {
+        [*] --> EstacionadoNormal
+        EstacionadoNormal --> EstacionadoNormal: Permanece
+        note: "El vehículo ocupa un espacio\ndentro del parqueadero"
+    end
+
+    Estacionado --> Pagando: Cliente inicia pago
+
+    state Pagando {
+        [*] --> EsperandoConfirmacion
+        EsperandoConfirmacion --> Pagado: Aprobado
+        EsperandoConfirmacion --> [*]: Rechazado (reintentar)
+        Pagado --> [*]: Continuar
+    end
+
+    Pagando --> AbriendoTalanqueraSalida: Pagado
+    AbriendoTalanqueraSalida --> Fuera: Sale del parqueadero
+    Fuera --> [*]
+
+    %% Error
+    state Fuera {
+        [*] --> Normal
+        Normal --> Bloqueado: Admin bloquea\n(placa morosa)
+        Bloqueado --> Normal: Admin desbloquea
+        note: "Vehículos bloqueados\nno pueden entrar"
+    end
+
+    PlacaVerificada --> Fuera: Placa no legible
+    </div>
+  </div>
+
+  <!-- 09 -->
+  <div class="card" id="09">
+    <div class="card-header">
+      <span class="badge">09</span>
+      <h2>Diagrama Temporal (Gantt)</h2>
+      <p>Timing flujo de salida — objetivo &lt; 1 segundo</p>
+    </div>
+    <div class="mermaid">
+gantt
+    title Flujo de Salida — Timing de Apertura de Talanquera
+    dateFormat X
+    axisFormat %S.%L s
+
+    section Cliente
+    Llega a la salida           :done,    0.000, 0.200s
+
+    section Cámara ANPR
+    Detección de movimiento     :done,    0.000, 0.050s
+    Captura imagen placa        :done,    0.050, 0.150s
+    OCR procesamiento           :done,    0.150, 0.300s
+
+    section Sistema
+    Consulta BD por placa       :active,  0.300, 0.150s
+    Validar pago confirmado     :crit,    0.450, 0.100s
+    Registrar salida RS-001     :crit,    0.550, 0.100s
+    Publicar señal MQTT         :crit,    0.650, 0.050s
+
+    section Talanquera
+    Recibir comando MQTT        :crit,    0.700, 0.050s
+    Abrir relé / talanquera     :crit,    0.750, 0.150s
+
+    section Cliente
+    Barrera levantada           :done,    0.900, 0.100s
+    Vehículo sale               :done,    1.000, 1.000s
+
+    section Meta
+    Objetivo total < 1s        :milestone, 1.000, 0s
+    </div>
+  </div>
+
+</div>
+
+<p class="footer">ParkCore UML Diagrams — Rendered with Mermaid 11</p>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis',
+      padding: 20,
+      nodeSpacing: 50,
+      rankSpacing: 80
+    },
+    sequence: {
+      actorMargin: 80,
+      boxMargin: 20,
+      noteMargin: 15,
+      messageMargin: 40,
+      mirrorActors: false,
+      bottomMarginAdj: 20,
+      useMaxWidth: true
+    },
+    state: {
+      useMaxWidth: true,
+      dividerMargin: 20,
+      sizeUnit: 5,
+      padding: 20,
+      textHeight: 20,
+      noteMargin: 15,
+      fontSizeFactor: 5.5,
+      fontSize: 24,
+      secondaryFontSize: 20
+    },
+    gantt: {
+      titleTopMargin: 25,
+      barHeight: 30,
+      barGap: 8,
+      topPadding: 50,
+      leftPadding: 120,
+      gridLineStartPadding: 35,
+      fontSize: 14,
+      sectionFontSize: 16,
+      numberSectionStyles: 4,
+      axisFormat: '%S.%L s'
+    },
+    class: {
+      useMaxWidth: true,
+      defaultRelationshipType: 'association'
+    }
+  });
+</script>
+
+</body>
+</html>
