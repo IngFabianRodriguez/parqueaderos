@@ -1,52 +1,75 @@
 %% Diagrama de Despliegue — Infraestructura ParkCore
-%% Nodos y relaciones de comunicación
+%% Nodos de infraestructura y relaciones de comunicación
 
-node "NavegadorWeb\n(Chrome)" as browser {
-    artifact "Frontend SPA\n(React/Vue)"
-}
+flowchart TB
+    %% =========================================================================
+    %% Estilos por tipo de nodo
+    %% =========================================================================
+    style Clientes fill:#2d4a22,stroke:#4a7c43,stroke-width:2px,color:#fff
+    style Servidores fill:#1a1a4e,stroke:#3a3a8e,stroke-width:2px,color:#fff
+    style Datos fill:#4e1a1a,stroke:#8e3a3a,stroke-width:2px,color:#fff
+    style IoT fill:#4e3a1a,stroke:#8e6a3a,stroke-width:2px,color:#fff
 
-node "AppMovil\n(iOS/Android)" as app {
-    artifact "App ParkCore\n(Híbrida)"
-}
+    subgraph Clientes["🖥️ Clientes"]
+        direction LR
+        Browser["🌐 NavegadorWeb\n(Chrome/Firefox)\nFrontend SPA"]
+        App["📱 App Móvil\n(iOS/Android)\nApp ParkCore"]
+    end
 
-node "ServidorAPI\n(Docker/K8s)" as server {
-    artifact "APIGateway\nNode.js"
-    artifact "Servicios\nMicroservicios"
-    artifact "Servicio ANPR\nPython/TensorFlow"
-}
+    subgraph Servidores["🖧 Servidores — Docker/K8s"]
+        direction LR
+        APIGateway["🔐 APIGateway\nNode.js"]
+        Microservicios["⚙️ Microservicios\n(Node.js/Python)"]
+        ANPRService["📷 Servicio ANPR\nPython/TensorFlow"]
+    end
 
-node "BaseDeDatos\n(PostgreSQL en AWS RDS)" as db {
-    artifact "ParkCore_DB\ntablas, índices"
-    artifact "Réplica Read"
-}
+    subgraph Datos["💾 Capa de Datos"]
+        direction LR
+        PostgreSQL["🗄️ PostgreSQL\n(AWS RDS)\nParkCore_DB\nRéplica Read"]
+        Redis["⚡ Redis\n(ElastiCache)\nSessions\nDisponibilidad"]
+        Mosquitto["📡 Mosquitto\nBroker MQTT\ntalanquera/#\nanpr/captures"]
+    end
 
-node "Redis\n(ElastiCache)" as redis {
-    artifact "Cache Sessions"
-    artifact "Cache Disponibilidad"
-}
+    subgraph IoT["📡 Dispositivos en Sede"]
+        direction LR
+        CamaraIP["📷 Cámara ANPR\n(IP)"]
+        TalanqueraPLC["🚧 Controladora\nTalanquera PLC"]
+        Sensores["📊 Sensores IoT\n(Ocupación)"]
+        EdgeGateway["🌐 Edge Gateway\nMQTT Bridge\nEdge Agent"]
+    end
 
-node "BrokerMQTT\n(Mosquitto)" as broker {
-    artifact "Topic: talanquera/#
-    Topic: anpr/captures"
-}
+    %% =========================================================================
+    %% Relaciones cliente → servidor
+    %% =========================================================================
+    Browser -->|HTTPS/WSS| APIGateway
+    App -->|HTTPS/MQTT| APIGateway
 
-node "DispositivoEnSede\n(Cámara IP, Talanquera PLC)" as iot {
-    artifact "Cámara ANPR"
-    artifact "Controladora Talanquera"
-    artifact "Sensores IoT"
-}
+    %% =========================================================================
+    %% Relaciones API → microservicios
+    %% =========================================================================
+    APIGateway -->|gRPC/REST| Microservicios
+    APIGateway -->|gRPC| ANPRService
 
-node "GatewayMQTT\n(Local sede)" as mqttgw {
-    artifact "Bridge MQTT"
-    artifact "Edge Agent"
-}
+    %% =========================================================================
+    %% Relaciones con datos
+    %% =========================================================================
+    Microservicios -->|JDBC/PostgreSQL| PostgreSQL
+    Microservicios -->|Redis| Redis
+    APIGateway -->|MQTT| Mosquitto
 
-%% Relaciones de comunicación
-browser -- server : HTTPS/WSS
-app -- server : HTTPS/MQTT
-server -- db : JDBC/PostgreSQL
-server -- redis : Redis Protocol
-server -- broker : MQTT
-broker -- mqttgw : MQTT
-mqttgw -- iot : RTSP, Modbus
-server ..> mqttgw : datos dispositivos
+    %% =========================================================================
+    %% Relaciones MQTT broker → edge
+    %% =========================================================================
+    Mosquitto -.->|MQTT| EdgeGateway
+
+    %% =========================================================================
+    %% Relaciones edge → dispositivos IoT
+    %% =========================================================================
+    EdgeGateway -->|RTSP| CamaraIP
+    EdgeGateway -->|Modbus/TCP| TalanqueraPLC
+    EdgeGateway -->|HTTP| Sensores
+
+    %% =========================================================================
+    %% Notas
+    %% =========================================================================
+    ANPRService -.->|RTSP| CamaraIP : streaming video

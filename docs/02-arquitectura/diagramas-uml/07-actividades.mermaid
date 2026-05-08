@@ -1,63 +1,62 @@
-%% Diagrama de Actividades — Flujo completo entrada-pago-salida
+%% Diagrama de Actividades — Flujo entrada-pago-salida
 %% ParkCore: Proceso desde llegada hasta salida del vehículo
 
-flowchart TD
-    %% Inicio del flujo
-    inicio([Vehículo en entrada])
-    
-    %% Decisión sobre legibilidad de placa
-    decideligibilidad{¿Placa legible?}
-    
-    %% Rama cuando placa NO es legible
-    registro_manual[/Registrar entrada manualmente\n(operador digita placa)/]
-    negar_entrada[/Negar entrada/]
-    
-    %% Rama cuando placa SÍ es legible
-    captura_anpr[Captura ANPR\nimagen de placa]
-    buscar_vehiculo[Buscar vehículo en BD]
-    registrar_entrada[Registrar entrada\nen base de datos]
-    
-    %% Decisión sobre disponibilidad
-    disponibilidad{¿Hay plazas\ndisponibles?}
-    
-    %% Rama cuando NO hay plazas
-    negar_entrada_2[/Niegan entrada\nLista de espera/]
-    
-    %% Rama cuando SÍ hay plazas
-    abrir_talanquera_entrada[Abrir talanquera\nde entrada]
-    esperar_estaciona[/Vehículo se estaciona/]
-    
-    %% Proceso de pago
-    cliente_paga[Cliente paga\n(app o cajero)]
-    decide_pago{¿Pago\nconfirmado?}
-    
-    %% Rama cuando pago falla
-    alerta_operador[/Alerta operador\npago fallido/]
-    
-    %% Rama cuando pago exitoso
-    abrir_talanquera_salida[Abrir talanquera\nde salida]
-    salida_vehiculo[/Vehículo sale/]
-    
-    %% Fin del flujo
-    fin([Fin])
-    
-    %% Flujo principal
-    inicio --> decideligibilidad
-    decideligibilidad -->|No| registro_manual
-    registro_manual --> negar_entrada
-    negar_entrada --> fin
-    decideligibilidad -->|Sí| captura_anpr
-    captura_anpr --> buscar_vehiculo
-    buscar_vehiculo --> registrar_entrada
-    registrar_entrada --> disponibilidad
-    disponibilidad -->|No| negar_entrada_2
-    negar_entrada_2 --> fin
-    disponibilidad -->|Sí| abrir_talanquera_entrada
-    abrir_talanquera_entrada --> esperar_estaciona
-    esperar_estaciona --> cliente_paga
-    cliente_paga --> decide_pago
-    decide_pago -->|No| alerta_operador
-    alerta_operador --> cliente_paga
-    decide_pago -->|Sí| abrir_talanquera_salida
-    abrir_talanquera_salida --> salida_vehiculo
-    salida_vehiculo --> fin
+stateDiagram-v2
+    [*] --> VerificandoEntrada
+
+    %% =========================================================================
+    %% ENTRADA
+    %% =========================================================================
+    state VerificandoEntrada {
+        [*] --> PlacaLeida
+        PlacaLeida --> PlacaIlegible: No legible
+
+        PlacaIlegible --> RegistroManual: Operador digita
+        RegistroManual --> PlacaLeida: Placa obtenida
+
+        PlacaLeida --> [*]: Listo
+    }
+
+    VerificandoEntrada --> DisponibilidadSede: Placa OK
+
+    state DisponibilidadSede {
+        [*] --> ConsultandoBD
+        ConsultandoBD --> HayPlazas: Espacios > 0
+        ConsultandoBD --> SinPlazas: Capacidad = 0
+
+        HayPlazas --> [*]: Espacios disponibles
+        SinPlazas --> [*]: Parqueadero lleno
+    }
+
+    DisponibilidadSede --> AbrirTalanqueraEntrada: HayPlazas
+    DisponibilidadSede --> NegarEntrada: SinPlazas
+
+    AbrirTalanqueraEntrada --> VehiculoEstacionado: Barrera abierta
+    NegarEntrada --> [*]: Fin — entrada negada
+
+    VehiculoEstacionado --> ProcesandoPago: Cliente inicia pago
+
+    %% =========================================================================
+    %% PAGO
+    %% =========================================================================
+    state ProcesandoPago {
+        [*] --> SolicitarMonto
+        SolicitarMonto --> ClienteConfirma: Usuario confirma
+
+        ClienteConfirma --> Procesando: Conectar pasarela
+        Procesando --> PagoExitoso: Aprobado
+        Procesando --> PagoFallido: Rechazado
+
+        PagoFallido --> SolicitarMonto: Reintentar
+
+        PagoExitoso --> [*]: Confirmado
+    }
+
+    ProcesandoPago --> AbrirTalanqueraSalida: PagoExitoso
+
+    %% =========================================================================
+    %% SALIDA
+    %% =========================================================================
+    AbrirTalanqueraSalida --> VehiculoSale: Barrera abierta
+    VehiculoSale --> ActualizarBD: Registrar salida
+    ActualizarBD --> [*]: Fin — proceso completo

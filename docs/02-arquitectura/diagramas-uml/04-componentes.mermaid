@@ -1,49 +1,88 @@
 %% Diagrama de Componentes — Arquitectura de alto nivel ParkCore
 %% Plataforma de gestión de parqueaderos
 
-package "Capa de Presentación" {
-    [ClienteWeb] as cw
-    [AppMovil] as am
-}
+flowchart LR
+    %% =========================================================================
+    %% Estilos
+    %% =========================================================================
+    style CapaPresentacion fill:#1a1a2e,stroke:#16213e,stroke-width:2px,color:#eee
+    style CapaNegocio fill:#1a1a2e,stroke:#16213e,stroke-width:2px,color:#eee
+    style CapaDatos fill:#1a1a2e,stroke:#16213e,stroke-width:2px,color:#eee
+    style DispositivosIoT fill:#1a1a2e,stroke:#16213e,stroke-width:2px,color:#eee
 
-package "Capa de Negocio" {
-    [APIGateway] as api
-    [ServicioANPR] as sanpr
-    [ServicioDisponibilidad] as sdisp
-    [ServicioPagos] as spagos
-    [ServicioTalanquera] as stalq
-    [ServicioNotificaciones] as sntf
-}
+    %% =========================================================================
+    %% Capa de Presentación
+    %% =========================================================================
+    subgraph CapaPresentacion["🔲 Capa de Presentación"]
+        direction TB
+        ClienteWeb["🌐 ClienteWeb"]
+        AppMovil["📱 AppMovil"]
+    end
 
-package "Capa de Datos" {
-    [BaseDatos\nPostgreSQL] as bd
-    [Cache\nRedis] as cache
-    [BrokerMQTT] as mqtt
-}
+    %% =========================================================================
+    %% Capa de Negocio
+    %% =========================================================================
+    subgraph CapaNegocio["⚙️ Capa de Negocio"]
+        direction LR
+        APIGateway["🔐 APIGateway"]
+        ServicioANPR["📷 ServicioANPR"]
+        ServicioDisponibilidad["📊 ServicioDisponibilidad"]
+        ServicioPagos["💳 ServicioPagos"]
+        ServicioTalanquera["🚧 ServicioTalanquera"]
+        ServicioNotificaciones["🔔 ServicioNotificaciones"]
+    end
 
-package "Dispositivos IoT" {
-    [Cámara ANPR] as cam
-    [Talanquera\nElectrónica] as talq
-    [Sensor\nOcupación] as sensor
-    [GatewayMQTT\nLocal] as gw
-}
+    %% =========================================================================
+    %% Capa de Datos
+    %% =========================================================================
+    subgraph CapaDatos["💾 Capa de Datos"]
+        direction LR
+        PostgreSQL["🗄️ PostgreSQL\nBase de Datos"]
+        Redis["⚡ Redis\nCache"]
+        BrokerMQTT["📡 BrokerMQTT"]
+    end
 
-%% Conexiones entre componentes
-cw --> api : HTTPS/REST
-am --> api : HTTPS/REST
-api --> sanpr : gRPC
-api --> sdisp : REST
-api --> spagos : REST
-api --> stalq : MQTT
-api --> sntf : REST
+    %% =========================================================================
+    %% Dispositivos IoT
+    %% =========================================================================
+    subgraph DispositivosIoT["📱 Dispositivos IoT"]
+        direction LR
+        CamaraANPR["📷 Cámara ANPR"]
+        TalanqueraElectronica["🚧 Talanquera\nElectrónica"]
+        SensorOcupacion["📊 Sensor\nOcupación"]
+        GatewayMQTT["🌐 GatewayMQTT\nLocal"]
+    end
 
-sanpr --> cam : RTSP
-stalq --> talq : MQTT
-sdisp --> sensor : HTTP
-cache --> bd : JDBC
-mqtt --> gw : TCP/IP
-api --> bd : SQL
-api --> cache : Redis Protocol
-spagos --> mqtt : Publish
-stalq --> mqtt : Subscribe
-sntf --> mqtt : Publish
+    %% =========================================================================
+    %% Flechas: Presentación → Negocio
+    %% =========================================================================
+    ClienteWeb --> APIGateway : HTTPS REST
+    AppMovil --> APIGateway : HTTPS REST
+
+    %% =========================================================================
+    %% Flechas: Negocio → Negocio (interno)
+    %% =========================================================================
+    APIGateway --> ServicioANPR : gRPC
+    APIGateway --> ServicioDisponibilidad : REST
+    APIGateway --> ServicioPagos : REST
+    APIGateway --> ServicioTalanquera : MQTT
+    APIGateway --> ServicioNotificaciones : REST
+
+    %% =========================================================================
+    %% Flechas: Negocio → Datos
+    %% =========================================================================
+    APIGateway --> PostgreSQL : JDBC
+    APIGateway --> Redis : Redis Protocol
+    ServicioPagos --> BrokerMQTT : Publish
+    ServicioTalanquera --> BrokerMQTT : Subscribe
+    ServicioNotificaciones --> BrokerMQTT : Publish
+
+    %% =========================================================================
+    %% Flechas: IoT → Datos / Negocio
+    %% =========================================================================
+    ServicioANPR --> CamaraANPR : RTSP
+    ServicioDisponibilidad --> SensorOcupacion : HTTP
+    ServicioTalanquera -.MQTT.-> TalanqueraElectronica : Señal abrir
+    BrokerMQTT -.MQTT.-> GatewayMQTT : Bridge
+    GatewayMQTT --> CamaraANPR : RTSP
+    GatewayMQTT --> TalanqueraElectronica : Modbus

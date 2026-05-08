@@ -1,32 +1,62 @@
-%% Diagrama de Estados — Ciclo de vida de un vehículo en el parqueadero
+%% Diagrama de Estados — Ciclo de vida de un vehículo
 %% ParkCore: Estados desde llegada hasta salida definitiva
 
 stateDiagram-v2
-    [*] --> Fuera: Vehículo fuera del parqueadero
+    direction TB
 
-    Fuera --> DetectadoEntrada: Llegada detectada\npor sensor/cámara
+    %% =========================================================================
+    %% Estados principales
+    %% =========================================================================
 
-    DetectadoEntrada --> EsperandoTalanqueraEntrada: Placa leída\ncorrectamente
+    [*] --> Fuera
 
-    EsperandoTalanqueraEntrada --> Estacionado: Entrada confirmada\ny espacio asignado
+    Fuera --> EntradaDetectada: Sensor/cámara\ndetecta vehículo
+
+    EntradaDetectada --> PlacaVerificada: OCR exitoso
+
+    PlacaVerificada --> AbriendoTalanquera: Espacio asignado
+
+    AbriendoTalanquera --> Estacionado: Vehículo dentro
 
     state Estacionado {
-        [*] --> Estacionado
-        Estacionado --> [*]
-    }
+        [*] --> EstacionadoNormal
+        EstacionadoNormal --> EstacionadoNormal: Vehículo\npermanece
 
-    Estacionado --> EsperandoPago: Cliente inicia\nproceso de pago
+        note: "El vehículo está dentro del parqueadero\nocupando un espacio"
+    end
 
-    EsperandoPago --> Pagado: Pago confirmado\npor pasarela
+    Estacionado --> Pagando: Cliente inicia pago
 
-    Pagado --> EsperandoTalanqueraSalida: Validación\ncompletada
+    state Pagando {
+        [*] --> EsperandoConfirmacion
+        EsperandoConfirmacion --> Confirmado: Pasarela\naprueba
+        EsperandoConfirmacion --> Rechazado: Pasarela\nrechaza
 
-    EsperandoTalanqueraSalida --> Fuera: Salida exitosa\nvehículo abandona
+        Rechazado --> [*]: Reintentar
 
-    Fuera --> [*]
+        Confirmado --> [*]: Listo
+    end
 
-    %% Nota sobre estados de error/bloqueo
+    Pagando --> AbriendoTalanqueraSalida: Pagado
+
+    AbriendoTalanqueraSalida --> Fuera: Vehículo sale
+
+    Fuera --> [*]: Ciclo completo
+
+    %% =========================================================================
+    %% Estados de error/bloqueo
+    %% =========================================================================
     state Fuera {
-        [*] --> Bloqueado: Placa bloqueada\n(moroso)
-        Bloqueado --> [*]: Admin desbloquea
-    }
+        [*] --> FueraNormal
+        FueraNormal --> Bloqueado: Admin bloquea\nplaca morosa
+
+        Bloqueado --> FueraNormal: Admin desbloquea
+
+        note: "Si el vehículo está bloqueado,\nel sistema niega la entrada"
+    end
+
+    %% =========================================================================
+    %% Transiciones de error en entrada
+    %% =========================================================================
+    EntradaDetectada --> Fuera: Placa no legible\n(no se puede registrar)
+    PlacaVerificada --> Fuera: Vehículo bloqueado\n(placa morosa)

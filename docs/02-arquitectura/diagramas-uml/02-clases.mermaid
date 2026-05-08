@@ -2,7 +2,11 @@
 %% Plataforma de gestión de parqueaderos
 
 classDiagram
-    %% Clase Sede
+    direction TB
+
+    %% =========================================================================
+    %% DOMINIO: Sede y Zonas
+    %% =========================================================================
     class Sede {
         -String idSede
         -String nombre
@@ -19,7 +23,6 @@ classDiagram
         +obtenerZonas() List~Zona~
     }
 
-    %% Clase Zona
     class Zona {
         -String idZona
         -String nombre
@@ -33,7 +36,6 @@ classDiagram
         +contarDisponibles() Integer
     }
 
-    %% Clase Espacio
     class Espacio {
         -String idEspacio
         -String codigo
@@ -46,7 +48,9 @@ classDiagram
         +liberar() void
     }
 
-    %% Clase Vehiculo
+    %% =========================================================================
+    %% DOMINIO: Vehículos y Registros
+    %% =========================================================================
     class Vehiculo {
         -String idVehiculo
         -String placa
@@ -62,7 +66,6 @@ classDiagram
         +obtenerRegistros() List~RegistroEntrada~
     }
 
-    %% Clase RegistroEntrada
     class RegistroEntrada {
         -String idRegistro
         -DateTime fechaHoraEntrada
@@ -76,7 +79,6 @@ classDiagram
         +registrar() void
     }
 
-    %% Clase RegistroSalida
     class RegistroSalida {
         -String idRegistroSalida
         -DateTime fechaHoraSalida
@@ -89,7 +91,9 @@ classDiagram
         +registrar() void
     }
 
-    %% Clase Pago
+    %% =========================================================================
+    %% DOMINIO: Pagos
+    %% =========================================================================
     class Pago {
         -String idPago
         -BigDecimal monto
@@ -105,7 +109,22 @@ classDiagram
         +getFechaPago() DateTime
     }
 
-    %% Clase Cliente
+    class PlanTarifario {
+        -String idPlan
+        -String nombre
+        -BigDecimal precioBase
+        -BigDecimal precioPorMinuto
+        -BigDecimal precioPorHora
+        -TipoPlan tipo
+        +getIdPlan() String
+        +getPrecioBase() BigDecimal
+        +calcularMonto(duracionMinutos) BigDecimal
+        +aplicarDescuento(monto) BigDecimal
+    }
+
+    %% =========================================================================
+    %% DOMINIO: Clientes
+    %% =========================================================================
     class Cliente {
         -String idCliente
         -String nombre
@@ -120,21 +139,9 @@ classDiagram
         +realizarPago(pago) void
     }
 
-    %% Clase PlanTarifario
-    class PlanTarifario {
-        -String idPlan
-        -String nombre
-        -BigDecimal precioBase
-        -BigDecimal precioPorMinuto
-        -BigDecimal precioPorHora
-        - TipoPlan tipo
-        +getIdPlan() String
-        +getPrecioBase() BigDecimal
-        +calcularMonto(duracionMinutos) BigDecimal
-        +aplicarDescuento(monto) BigDecimal
-    }
-
-    %% Clase Talanquera
+    %% =========================================================================
+    %% DOMINIO: Dispositivos
+    %% =========================================================================
     class Talanquera {
         -String idTalanquera
         -TipoTalanquera tipo
@@ -148,7 +155,6 @@ classDiagram
         +enviarSenialApertura() void
     }
 
-    %% Clase Notificacion
     class Notificacion {
         -String idNotificacion
         -TipoNotificacion tipo
@@ -161,7 +167,9 @@ classDiagram
         +marcarLeida() void
     }
 
-    %% Clase Usuario
+    %% =========================================================================
+    %% DOMINIO: Usuarios y Auth
+    %% =========================================================================
     class Usuario {
         -String idUsuario
         -String nombre
@@ -176,7 +184,6 @@ classDiagram
         +tienePermiso(permiso) Boolean
     }
 
-    %% Clase Rol
     class Rol {
         -String idRol
         -String nombre
@@ -187,18 +194,48 @@ classDiagram
         +tienePermiso(permiso) Boolean
     }
 
-    %% Relaciones entre clases
-    Sede "1" o-- "1..n" Zona : tiene
-    Zona "1" o-- "1..n" Espacio : contiene
-    Sede "1" o-- "1..n" RegistroEntrada : registra
-    RegistroEntrada "1" -- "1" Vehiculo : pertenece
-    RegistroSalida "1" -- "1" Vehiculo : pertenece
-    RegistroEntrada "1" -- "1" Pago : genera
-    Cliente "1" o-- "1..n" Vehiculo : posee
-    Cliente "1" o-- "1..n" Pago : realiza
-    PlanTarifario "1" o-- "1..n" Sede : aplica a
-    RegistroEntrada "1" -- "0..1" Espacio : ocupa
-    Talanquera "1" -- "0..1" Sede : pertenece
-    Usuario "1" -- "1" Rol : tiene
-    Usuario "1" -- "0..1" Sede : administra
-    Notificacion "1" -- "0..1" Cliente : envia a
+    %% =========================================================================
+    %% RELACIONES — Composicion (◇──) y Asociacion (──)
+    %% =========================================================================
+
+    %% Sede → Zonas (composición)
+    Sede "1" *-- "1..n" Zona : tiene
+
+    %% Zona → Espacios (composición)
+    Zona "1" *-- "1..n" Espacio : contiene
+
+    %% Sede → RegistrosEntrada (composición)
+    Sede "1" *-- "0..n" RegistroEntrada : registra entradas
+
+    %% RegistroEntrada → Vehiculo (asociación)
+    RegistroEntrada "1" --> "1" Vehiculo : pertenece
+
+    %% RegistroSalida → RegistroEntrada (asociación)
+    RegistroSalida "1" --> "1" RegistroEntrada : cierra
+
+    %% RegistroEntrada → Pago (asociación)
+    RegistroEntrada "1" --> "0..1" Pago : genera
+
+    %% Cliente → Vehiculo (composición)
+    Cliente "1" *-- "0..n" Vehiculo : posee
+
+    %% Cliente → Pago (asociación)
+    Cliente "1" --> "0..n" Pago : realiza
+
+    %% PlanTarifario → Sede (asociación)
+    PlanTarifario "1" --> "0..n" Sede : aplica a
+
+    %% RegistroEntrada → Espacio (asociación opcional)
+    RegistroEntrada "1" --> "0..1" Espacio : ocupa
+
+    %% Talanquera → Sede (asociación)
+    Talanquera "1" --> "0..1" Sede : pertenece
+
+    %% Usuario → Rol (asociación)
+    Usuario "1" --> "1" Rol : tiene
+
+    %% Usuario → Sede (asociación opcional)
+    Usuario "1" --> "0..1" Sede : administra
+
+    %% Notificacion → Cliente (asociación)
+    Notificacion "1" --> "0..1" Cliente : envia a

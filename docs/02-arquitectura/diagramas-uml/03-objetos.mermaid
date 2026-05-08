@@ -1,77 +1,88 @@
-%% Diagrama de Objetos — Escenario concreto de flujo entrada-pago-salida
-%% ParkCore: Vehículo ABC-123 ingresa, estaciona, paga y sale
+%% Diagrama de Objetos — Escenario: Vehículo ABC-123 ingresa, paga y sale
+%% ParkCore — Instancias del dominio
 
-object "sedeCentro: Sede" as sedeCentro {
-    idSede = "S001"
-    nombre = "Parqueadero Centro"
-    direccion = "Av. Principal 123"
-    ciudad = "Bogotá"
-    capacidadTotal = 200
-}
+classDiagram
+    direction TB
 
-object "zonaA: Zona" as zonaA {
-    idZona = "Z001"
-    nombre = "Zona A - Covered"
-    tipo = "CUBIERTA"
-    capacidad = 100
-}
+    %% =========================================================================
+    %% Instancias concretas
+    %% =========================================================================
 
-object "espacio12: Espacio" as espacio12 {
-    idEspacio = "E012"
-    codigo = "A-12"
-    estado = "OCUPADO"
-}
+    class sedeCentro {
+        idSede = "S001"
+        nombre = "Parqueadero Centro"
+        direccion = "Av. Principal 123"
+        ciudad = "Bogotá"
+        capacidadTotal = 200
+    }
 
-object "vehiculoABC123: Vehiculo" as vehiculoABC123 {
-    idVehiculo = "V001"
-    placa = "ABC-123"
-    marca = "Toyota"
-    modelo = "Corolla"
-    color = "Gris"
-    bloqueado = false
-}
+    class zonaA {
+        idZona = "Z001"
+        nombre = "Zona A — Cubierta"
+        tipo = "CUBIERTA"
+        capacidad = 100
+    }
 
-object "regEntrada1: RegistroEntrada" as regEntrada1 {
-    idRegistro = "RE001"
-    fechaHoraEntrada = "2026-05-07 10:30:00"
-    imagenPlaca = "re001_placa.jpg"
-}
+    class espacio12 {
+        idEspacio = "E012"
+        codigo = "A-12"
+        estado = "OCUPADO"
+    }
 
-object "pago001: Pago" as pago001 {
-    idPago = "P001"
-    monto = 15000.00
-    metodo = "TARJETA_CREDITO"
-    estado = "CONFIRMADO"
-    fechaPago = "2026-05-07 12:45:00"
-}
+    class vehiculoABC123 {
+        idVehiculo = "V001"
+        placa = "ABC-123"
+        marca = "Toyota"
+        modelo = "Corolla"
+        color = "Gris"
+        bloqueado = false
+    }
 
-object "talanquera1: Talanquera" as talanquera1 {
-    idTalanquera = "T001"
-    tipo = "ENTRADA"
-    ipDispositivo = "192.168.1.101"
-    estado = "CERRADO"
-}
+    class regEntrada1 {
+        idRegistro = "RE001"
+        fechaHoraEntrada = "2026-05-07 10:30:00"
+        imagenPlaca = "re001_placa.jpg"
+    }
 
-object "clienteJuan: Cliente" as clienteJuan {
-    idCliente = "C001"
-    nombre = "Juan Pérez"
-    telefono = "+57 300 123 4567"
-    email = "juan.perez@email.com"
-}
+    class pago001 {
+        idPago = "P001"
+        monto = 15000.00
+        metodo = "TARJETA_CREDITO"
+        estado = "CONFIRMADO"
+        fechaPago = "2026-05-07 12:45:00"
+    }
 
-%% Relaciones entre objetos (instancias del flujo)
-sedeCentro --> zonaA : tiene >
-zonaA --> espacio12 : contiene >
-espacio12 --> vehiculoABC123 : ocupa >
-regEntrada1 --> vehiculoABC123 : registra vehículo >
-regEntrada1 --> espacio12 : asigna espacio >
-regEntrada1 --> sedeCentro : registrado en >
-pago001 --> regEntrada1 : corresponde a >
-pago001 --> clienteJuan : realizado por >
-talanquera1 --> sedeCentro : pertenece a >
-clienteJuan --> vehiculoABC123 : posee >
+    class talanquera1 {
+        idTalanquera = "T001"
+        tipo = "ENTRADA"
+        ipDispositivo = "192.168.1.101"
+        estado = "CERRADO"
+    }
 
-%% Nota explicativa del escenario
-note "Escenario: Juan llega con su Toyota ABC-123 al Parqueadero Centro.\nSe registra entrada en espacio A-12. Paga $15.000. La talanquera abre." as escenario
-sedeCentro .. escenario
-clienteJuan .. escenario
+    class clienteJuan {
+        idCliente = "C001"
+        nombre = "Juan Pérez"
+        telefono = "+57 300 123 4567"
+        email = "juan.perez@email.com"
+    }
+
+    %% =========================================================================
+    %% Relaciones entre objetos (instancias)
+    %% =========================================================================
+    sedeCentro *-- zonaA : tiene
+    zonaA *-- espacio12 : contiene
+    espacio12 ..> vehiculoABC123 : ocupado por
+
+    regEntrada1 --> vehiculoABC123 : registra vehículo
+    regEntrada1 --> espacio12 : asigna espacio
+    regEntrada1 --> sedeCentro : registrado en
+
+    pago001 --> regEntrada1 : corresponde a
+    pago001 --> clienteJuan : realizado por
+
+    talanquera1 --> sedeCentro : pertenece a
+
+    clienteJuan ..> vehiculoABC123 : posee
+
+    %% Nota del escenario
+    note for sedeCentro "Escenario: Juan llega con su Toyota ABC-123.\nRegistra entrada en espacio A-12. Paga $15.000.\nLa talanquera abre y el vehículo sale."

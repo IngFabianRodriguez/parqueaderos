@@ -1,60 +1,109 @@
-%% Diagrama de Secuencia — Flujo principal entrada-pago-salida
+%% Diagrama de Secuencia — Flujo entrada-pago-salida
 %% ParkCore: Proceso completo de un vehículo
 
 sequenceDiagram
+    autoAllocate arrows on
+
     participant Cliente
     participant ANPR
     participant Sistema
+    participant DB as Base Datos
     participant Talanquera
 
-    %% Fase 1: Entrada
-    Cliente->>+ANPR: Vehículo llega a entrada
-    ANPR->>ANPR: Detecta movimiento
-    ANPR->>ANPR: Captura imagen placa
-    ANPR-->>+Sistema: Envía placa "ABC-123" + timestamp
-    Sistema->>Sistema: Busca vehículo en BD
-    Sistema->>Sistema: Registra entrada (RE-001)
-    Sistema->>Sistema: Asigna espacio disponible
-    Sistema->>Sistema: Actualiza dashboard disponibilidad
-    Sistema-->>-Cliente: Confirma entrada (espacio A-12)
-    ANPR-->>Talanquera: Señal abrir
-    Talanquera->>Talanquera: Abre talanquera entrada
-    Talanquera-->>Cliente: Barrera levantada
-    Cliente->>Cliente: Estaciona vehículo
+    %% =========================================================================
+    %% FASE 1: ENTRADA
+    %% =========================================================================
+    rect rgb(30, 50, 30)
+        note over Cliente, Talanquera: "FASE 1 — ENTRADA"
+
+        Cliente->>+ANPR: Vehículo llega a la entrada
+        ANPR->>ANPR: Detecta movimiento en cámara
+
+        par Captura de placa
+            ANPR->>ANPR: Captura imagen de placa
+            ANPR->>ANPR: OCR procesa imagen → "ABC-123"
+        end
+
+        ANPR-->>+Sistema: Placa "ABC-123" + timestamp
+
+        Sistema->>+DB: Buscar vehículo por placa
+        DB-->>-Sistema: ¿Vehículo existe? → Nuevo cliente
+
+        Sistema->>+DB: Registrar entrada (RE-001)
+        DB-->>-Sistema: Entrada almacenada
+
+        Sistema->>+DB: Asignar espacio disponible (A-12)
+        DB-->>-Sistema: Espacio E012 estado → OCUPADO
+
+        Sistema->>+DB: Actualizar dashboard disponibilidad
+        DB-->>-Sistema: Disponibilidad actualizada
+
+        Sistema-->>-Cliente: Confirma entrada — Espacio A-12
+
+        Sistema-->>+Talanquera: Señal abrir (MQTT)
+        Talanquera->>Talanquera: Abre talanquera entrada
+        Talanquera-->>-Cliente: Barrera levantada
+
+        Cliente->>Cliente: Estaciona vehículo en A-12
+    end
 
     deactivate Cliente
     deactivate ANPR
     deactivate Talanquera
 
-    %% Fase 2: Espera (estacionado)
+    %% =========================================================================
+    %% FASE 2: PAGO
+    %% =========================================================================
+    rect rgb(50, 30, 30)
+        note over Cliente, Sistema: "FASE 2 — PAGO"
 
-    %% Fase 3: Pago
-    Note over Cliente,Sistema: Cliente decide pagar
-    Cliente->>+Sistema: Solicita pago (app/cajero)
-    Sistema->>Sistema: Calcula tarifa estimada
-    Sistema-->>Cliente: Muestra monto a pagar
-    Cliente->>Sistema: Confirma pago
-    Sistema->>Sistema: Procesa pago (pasarela)
-    Sistema->>Sistema: Registra pago (P-001)
-    Sistema-->>Cliente: Pago confirmado
+        Cliente->>+Sistema: Solicita pago (app/cajero)
+        Sistema->>Sistema: Calcula tarifa estimada
+        Sistema-->>Cliente: Muestra monto a pagar ($15.000)
 
-    deactivate Sistema
+        Cliente->>+Sistema: Confirma pago
+        Sistema->>+Sistema: Procesa vía pasarela pagos
+        Sistema->>+DB: Registrar pago (P-001)
+        DB-->>-Sistema: Pago registrado — CONFIRMADO
+        Sistema-->>-Cliente: Pago confirmado ✓
 
-    %% Fase 4: Salida
-    Note over Cliente,Talanquera: Cliente se dirige a salida
-    Cliente->>+ANPR: Llega a talanquera salida
-    ANPR->>ANPR: Captura imagen placa
-    ANPR-->>+Sistema: Envía placa "ABC-123"
-    Sistema->>Sistema: Busca registro entrada activo
-    Sistema->>Sistema: Verifica pago confirmado
-    Sistema->>Sistema: Calcula duración total
-    Sistema->>Sistema: Registra salida (RS-001)
-    Sistema-->>-Talanquera: Señal abrir
-    Talanquera->>Talanquera: Abre talanquera salida
-    Talanquera-->>Cliente: Barrera levantada
-    Cliente->>Cliente: Sale del parqueadero
+        deactivate Sistema
+    end
+
+    %% =========================================================================
+    %% FASE 3: SALIDA
+    %% =========================================================================
+    rect rgb(30, 30, 50)
+        note over Cliente, Talanquera: "FASE 3 — SALIDA"
+
+        Cliente->>+ANPR: Llega a talanquera de salida
+
+        ANPR->>ANPR: Captura imagen placa
+        ANPR->>ANPR: OCR → "ABC-123"
+        ANPR-->>+Sistema: Placa "ABC-123"
+
+        Sistema->>+DB: Buscar registro entrada activo
+        DB-->>-Sistema: RE-001 encontrado
+
+        Sistema->>+DB: Verificar pago confirmado
+        DB-->>-Sistema: Pago P-001 — CONFIRMADO ✓
+
+        Sistema->>+DB: Calcular duración total
+        Sistema->>+DB: Registrar salida (RS-001)
+        DB-->>-Sistema: Salida almacenada
+
+        Sistema->>+DB: Liberar espacio E012 → DISPONIBLE
+        DB-->>-Sistema: Estado actualizado
+
+        Sistema-->>-Talanquera: Señal abrir (MQTT)
+        Talanquera->>Talanquera: Abre talanquera salida
+        Talanquera-->>Cliente: Barrera levantada
+
+        Cliente->>Cliente: Sale del parqueadero
+    end
 
     deactivate Cliente
     deactivate ANPR
     deactivate Talanquera
     deactivate Sistema
+    deactivate DB

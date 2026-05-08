@@ -1,51 +1,47 @@
 %% Diagrama de Casos de Uso — ParkCore
 %% Plataforma de gestión de parqueaderos
 
+%% Configuración
+不开图表方向
+%% =============
+
 %% Actores del sistema
-actor Cliente as "Cliente (conductor)"
+actor Cliente <<Cliente (conductor)>>
 actor Operador
-actor AdministradorSede as "Administrador de Sede"
-actor AdministradorGlobal as "Administrador Global"
-actor SistemaANPR as "Sistema ANPR"
+actor AdminSede <<Administrador de Sede>>
+actor AdminGlobal <<Administrador Global>>
+actor SistemaANPR <<Sistema ANPR>>
 
-%% Casos de Uso
-note "UC1: Consultar disponibilidad de espacios en tiempo real" as UC1N
-usecase "UC1: Consultar disponibilidad" as UC1
+%% Casos de Uso — Agrupa por funcionalidad
+rect rgb(40, 40, 80)
+    note "Gestión de Entrada/Salida" as N1
+    usecase UC1 as "Consultar disponibilidad"
+    usecase UC2 as "Registrar entrada ANPR"
+    usecase UC3 as "Registrar salida ANPR"
+    usecase UC6 as "Abrir talanquera"
+end rect
 
-note "UC2: Registrar entrada de vehículo mediante lectura ANPR" as UC2N
-usecase "UC2: Registrar entrada (ANPR)" as UC2
+rect rgb(50, 70, 50)
+    note "Pagos" as N2
+    usecase UC4 as "Realizar pago"
+    usecase UC5 as "Validar pago"
+end rect
 
-note "UC3: Registrar salida de vehículo mediante lectura ANPR" as UC3N
-usecase "UC3: Registrar salida (ANPR)" as UC3
+rect rgb(70, 50, 50)
+    note "Administración" as N3
+    usecase UC7 as "Gestionar tarifas"
+    usecase UC8 as "Bloquear placa moroso"
+    usecase UC9 as "Ver dashboard"
+    usecase UC10 as "Gestionar usuarios y roles"
+end rect
 
-note "UC4: Realizar pago del estacionamiento" as UC4N
-usecase "UC4: Realizar pago" as UC4
+rect rgb(50, 50, 70)
+    note "Consultas" as N4
+    usecase UC11 as "Recibir notificaciones"
+    usecase UC12 as "Consultar historial por placa"
+end rect
 
-note "UC5: Validar que el pago fue completado exitosamente" as UC5N
-usecase "UC5: Validar pago" as UC5
-
-note "UC6: Enviar señal para abrir la talanquera" as UC6N
-usecase "UC6: Abrir talanquera" as UC6
-
-note "UC7: Gestionar tarifas y planes de precios" as UC7N
-usecase "UC7: Gestionar tarifas" as UC7
-
-note "UC8: Bloquear placa de cliente moroso" as UC8N
-usecase "UC8: Bloquear placa moroso" as UC8
-
-note "UC9: Ver dashboard consolidado con métricas" as UC9N
-usecase "UC9: Ver dashboard consolidado" as UC9
-
-note "UC10: Gestionar usuarios y asignar roles" as UC10N
-usecase "UC10: Gestionar usuarios y roles" as UC10
-
-note "UC11: Recibir notificaciones del sistema" as UC11N
-usecase "UC11: Recibir notificaciones" as UC11
-
-note "UC12: Consultar historial de ingresos por placa" as UC12N
-usecase "UC12: Consultar historial por placa" as UC12
-
-%% Relaciones Actor → Casos de Uso
+%% Relaciones Actor → Caso de Uso
 Cliente --> UC1
 Cliente --> UC2
 Cliente --> UC3
@@ -56,13 +52,13 @@ Operador --> UC1
 Operador --> UC6
 Operador --> UC7
 
-AdministradorSede --> UC7
-AdministradorSede --> UC8
-AdministradorSede --> UC9
-AdministradorSede --> UC10
+AdminSede --> UC7
+AdminSede --> UC8
+AdminSede --> UC9
+AdminSede --> UC10
 
-AdministradorGlobal --> UC9
-AdministradorGlobal --> UC10
+AdminGlobal --> UC9
+AdminGlobal --> UC10
 
 SistemaANPR --> UC2
 SistemaANPR --> UC3
