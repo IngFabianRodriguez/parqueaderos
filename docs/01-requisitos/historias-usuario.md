@@ -511,4 +511,183 @@
 
 ---
 
-*Total: 30 historias de usuario (12 core + 18 SaaS)*
+### 42. Dashboard de salud del sistema (Observabilidad)
+
+**Como** Equipo interno de ParkCore **quiero** ver en tiempo real qué microservicios están arriba o caídos **para** reaccionar antes de que los clientes se quejen.
+
+**Criterios de aceptación:**
+- **Given** el equipo accede al dashboard de salud
+- **When** todos los microservicios están responding
+- **Then** muestra verde con uptime del día: "api-gateway ✓, auth-service ✓, parking-service ✓"
+- **And** cuando un servicio deja de responder, el recuadro pasa a rojo y envía alerta a Slack
+
+---
+
+### 43. Configurar umbral de alerta y canal de notificación
+
+**Como** Tenant_admin **quiero** recibir una alerta por Slack cuando la latencia de la API exceda 500ms **para** estar informado sin recibir spam por email.
+
+**Criterios de aceptación:**
+- **Given** el tenant tiene configurado un umbral de alerta: latencia > 500ms por 3 min
+- **When** la latencia de la API Gateway llega a 600ms durante 4 minutos
+- **Then** se dispara una alerta con severity "warning" al canal de Slack configurado
+- **And** el evento queda registrado en alerta_evento con trace_id para debugging
+
+---
+
+### 44. Heartbeat de talanquera y alerta offline
+
+**Como** Operador de sede **quiero** recibir alerta cuando una talanquera lleva 2 minutos sin responder **para** evitar que los vehículos queden atrapados.
+
+**Criterios de aceptación:**
+- **Given** la talanquera T1 deja de enviar heartbeats (normalmente cada 60s)
+- **When** pasan 120 segundos sin heartbeat
+- **Then** el sistema marca T1 como "offline" en el dashboard
+- **And** el operador recibe push notification: "⚠️ Talanquera T1 offline hace 2min"
+- **And** se crea un alerta_evento con severity "critical"
+
+---
+
+### 45. Generar reporte de ingresos con comparativa
+
+**Como** Admin de sede **quiero** ver el reporte de ingresos de mayo con comparativa vs abril **para** entender cómo vamos vs el mes pasado.
+
+**Criterios de aceptación:**
+- **Given** el admin selecciona reporte de ingresos para mayo 2026
+- **Then** el sistema muestra: total ingresos $45.2M COP, 1,847 transacciones, forma de pago breakdown
+- **And** comparativa automática: "vs abril: +12.3% (abril: $40.2M, 1,620 transacciones)"
+- **And** exportable a Excel y PDF
+
+---
+
+### 46. Programar reporte diario de morosidad
+
+**Como** Admin de tenant **quiero** recibir un email cada lunes con el reporte de morosos **para** hacer seguimiento sin entrar al sistema.
+
+**Criterios de aceptación:**
+- **Given** el admin configura un reporte programado: morosidad, frecuencia weekly, cada lunes 8am, email gerencia@empresa.com
+- **When** llega el lunes a las 8am
+- **Then** el sistema genera el reporte y lo envía a gerencia@empresa.com
+- **And** se guarda un registro en reporte_log con: destinatario, hora envío, estado, file_url
+
+---
+
+### 47. Operador hace cierre de turno con diferencia de caja
+
+**Como** Operador **quiero** reportar el cierre de turno al final de mi jornada **para** dejar la caja cuadrada y con registro.
+
+**Criterios de aceptación:**
+- **Given** el operador ha trabajado 8 horas y la caja debería tener $2,350,000
+- **When** cuenta el dinero físico y encuentra $2,340,000 (diferencia de -$10,000, que es -0.43%)
+- **Then** el sistema marca el cierre como "en discrepancia"
+- **And** el operador debe ingresar justificación: "Falta un billete de $10,000 - se cayó al suelo"
+- **And** el admin recibe notificación de cierre con discrepancia
+
+---
+
+### 48. Cliente crea ticket de soporte desde la app
+
+**Como** Cliente que tuvo problema con el cobro **quiero** reportarlo desde la app sin llamar **para** dejar registro escrito de mi queja.
+
+**Criterios de aceptación:**
+- **Given** el cliente fue cobrado dos veces por la misma transacción
+- **When** abre la app, toca "Ayuda" → "Reportar problema", selecciona la transacción y describe el error
+- **Then** se crea un ticket con tipo "incidente", prioridad "alta", estado "open"
+- **And** el operador de la sede recibe la notificación del ticket
+- **And** el cliente recibe confirmación: "Tu ticket #2847 fue creado, tiempo estimado de respuesta: 2 horas"
+
+---
+
+### 49. Cliente deja feedback después de la transacción
+
+**Como** Cliente **quiero** calificar mi experiencia después de salir del parqueadero **para** que el operador sepa cómo estoy.
+
+**Criterios de aceptación:**
+- **Given** el cliente completó su transacción y salió del parqueadero
+- **When** recibe la notificación "Califica tu experiencia"
+- **Then** puede calificar 1-5 estrellas y dejar un comentario opcional
+- **And** el admin de la sede ve la calificación en el dashboard: "Calificación promedio: 4.3 ★ (últimos 30 días)"
+- **And** si la calificación es 1-2 estrellas, el ticket se eleva a prioridad "urgente"
+
+---
+
+### 50. App operador: abrir talanquera manualmente
+
+**Como** Operador **quiero** abrir la talanquera desde la app si el sistema automático falla **para** no dejar a un cliente atrapado.
+
+**Criterios de aceptación:**
+- **Given** la talanquera de salida está cerrada y el cliente no tiene cómo pagar (la app de pago está caída)
+- **When** el operador toca "Abrir talanquera" y confirma con doble tap
+- **Then** el comando se envía al dispositivo
+- **And** se registra en auditoría: "talanquera_abierta_manual, operador Juan Pérez, motivo: falla_sistema_pago"
+- **And** el admin recibe notificación del evento
+
+---
+
+### 51. Cliente hace prepago desde la app
+
+**Como** Cliente **quiero** pagar anticipadamente mi parqueo antes de llegar al parqueadero **para** no preocuparme por el pago al salir.
+
+**Criterios de aceptación:**
+- **Given** el cliente tiene vehículo Mazda CX-5 placas ABC123 registrado en la app
+- **When** desde la app selecciona "Prepagar" y elige 2 horas
+- **Then** se genera un prepago de $12,000 que queda asociado a la placa ABC123
+- **And** cuando el vehículo entre, el sistema detecta que tiene crédito prepagado y habilita la salida
+- **And** al salir no necesita hacer pago adicional
+
+---
+
+### 52. Admin configura horarios de silencio para mantenimiento
+
+**Como** Tenant_admin **quiero** configurar una ventana de silencio de 2am-4am los domingos para que las alertas de mantenimiento no molesten **para** evitar waking a nadie en la noche.
+
+**Criterios de aceptación:**
+- **Given** el admin configura una alerta: "CPU > 80%" canal email
+- **And** configura ventana de silencio: domingo 2am-4am
+- **When** el domingo a las 2:30am el CPU llega a 85%
+- **Then** la alerta NO se envía
+- **And** queda registrada en alerta_evento con metadata "silenciada: true"
+- **When** a las 5am sigue en 85% CPU
+- **Then** la alerta SÍ se envía
+
+---
+
+### 53. Ver audit log filtrado por usuario y acción
+
+**Como** Tenant_admin **quiero** buscar el audit log para saber qué hizo el operador "María" ayer **para** resolver una dispute.
+
+**Criterios de aceptación:**
+- **Given** hay un audit log inmutable de todas las acciones
+- **When** el admin filtra: usuario "María", acción "talanquera_abierta", ayer
+- **Then** el sistema muestra: "María abrió talanquera T2 el 2026-05-07 14:32:15 (turno tarde) motivo: emergencia"
+- **And** no se puede modificar ni eliminar ningún registro del audit log
+
+---
+
+### 54. Chat en tiempo real entre cliente y operador
+
+**Como** Cliente **quiero** chatear con el operador desde la app si tengo un problema **para** resolverlo sin llamar ni esperar ticket.
+
+**Criterios de aceptación:**
+- **Given** el cliente tiene un ticket abierto #2847
+- **When** dentro del ticket toca "Chatear ahora"
+- **Then** se abre un chat en tiempo real con el operador asignado
+- **And** los mensajes aparecen instantáneamente (WebSocket)
+- **And** el operador puede responder desde su app o desde el admin web
+
+---
+
+### 55. Admin ve dashboard NPS por sede
+
+**Como** Tenant_admin **quiero** ver el NPS de cada sede para saber dónde está fallando la experiencia **para** tomar decisiones de mejora.
+
+**Criterios de aceptación:**
+- **Given** en los últimos 30 días hubo 847 feedbacks
+- **When** el admin accede al dashboard de satisfacción
+- **Then** ve: NPS global 62, sede Centro 58, sede Norte 71, sede Sur 55
+- **And** la sede Sur con NPS 55 tiene un ticket abierto de un cliente que se quejó de "tiempo de espera muy largo"
+- **And** puede filtrar por período, сравнивать con mes anterior
+
+---
+
+*Total: 55 historias de usuario (12 core + 18 SaaS + 25 ops/support/apps)*

@@ -684,6 +684,181 @@ CREATE TABLE registro_entrada_2026_01 PARTITION OF registro_entrada
 **Índices:**
 - `idx_regla_tarifaria_sede_fechas` en `(sede_id, fecha_inicio, fecha_fin)`
 
+### 27. alerta_config
+
+**Descripción**: Configuración de alertas por threshold y canal de notificación.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario (NULL = global del sistema) |
+| nombre | VARCHAR(100) | NOT NULL | "Talanquera offline > 2min" |
+| tipo | VARCHAR(30) | NOT NULL | metric, device_offline, sla_breach, anomaly |
+| metric_name | VARCHAR(50) | | Nombre de la métrica (cpu, ram, latency, etc.) |
+| umbral | DECIMAL(10,2) | NOT NULL | Valor threshold |
+| condicion | VARCHAR(10) | NOT NULL | >, <, >=, <= |
+| duracion_min | INTEGER | DEFAULT 0 | Minutos consecutivos antes de disparar (0 = inmediato) |
+| canal | VARCHAR(20) | NOT NULL | email, sms, slack, webhook |
+| destino | VARCHAR(255) | NOT NULL | Email, phone, Slack webhook URL |
+| silenciar_desde | TIMESTAMPTZ | | Inicio ventana de silencio (NULL = sin silencio) |
+| silenciar_hasta | TIMESTAMPTZ | | Fin ventana de silencio |
+| activo | BOOLEAN | DEFAULT true | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 28. alerta_evento
+
+**Descripción**: Registro de cada alerta disparada. El sistema guarda cada evento para auditoría y retry.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| alerta_config_id | UUID | FK → alerta_config, NOT NULL | Config que la disparó |
+| tenant_id | UUID | FK → tenant, NULL | Tenant (NULL = sistema) |
+| severity | VARCHAR(10) | NOT NULL | critical, warning, info |
+| titulo | VARCHAR(200) | NOT NULL | |
+| mensaje | TEXT | NOT NULL | |
+| metadata | JSONB | DEFAULT '{}' | Datos del evento: valor_actual, servidor, trace_id |
+| estado | VARCHAR(20) | DEFAULT 'firing' | firing, acknowledged, resolved |
+| resueler_por | UUID | FK → tenant_user | Usuario que resolvió |
+| resuele_at | TIMESTAMPTZ | | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+**Índices:**
+- `idx_alerta_evento_tenant_estado` en `(tenant_id, estado)`
+- `idx_alerta_evento_created` en `(created_at)` para query de últimas 24h
+
+### 29. metricSnapshot
+
+**Descripción**: Snapshots periódicos de métricas de infraestructura (CPU, RAM, latencia, throughput) para dashboards y Grafana.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| microservicio | VARCHAR(50) | NOT NULL | api-gateway, auth-service, parking-service, etc. |
+| timestamp | TIMESTAMPTZ | NOT NULL | Momento del snapshot |
+| cpu_pct | DECIMAL(5,2) | | Porcentaje CPU usado |
+| ram_mb | INTEGER | | RAM usada en MB |
+| disk_pct | DECIMAL(5,2) | | Porcentaje disco usado |
+| latency_ms | INTEGER | | Latencia promedio del periodo (ms) |
+| req_count | INTEGER | | Requests en el periodo |
+| error_rate | DECIMAL(5,2) | | Porcentaje de errores 5xx |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| INDEX | | | `(microservicio, timestamp)` para Grafana |
+
+### 30. reporte_programado
+
+**Descripción**: Configuración de reportes que se generan y envían periódicamente.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario |
+| nombre | VARCHAR(100) | NOT NULL | "Reporte diario de ingresos" |
+| tipo_reporte | VARCHAR(50) | NOT NULL | ingresos, ocupacion, morosidad, productividad, flota |
+| frecuencia | VARCHAR(20) | NOT NULL | daily, weekly, monthly |
+| filtros | JSONB | DEFAULT '{}' | `{ "sede_ids": [], "incluir_graficos": true }` |
+| formato | VARCHAR(10) | NOT NULL | xlsx, csv, pdf |
+| destinatarios | VARCHAR(500)[] | NOT NULL | Emails recipients |
+| ultimo_ejecucion | TIMESTAMPTZ | | |
+| proxima_ejecucion | TIMESTAMPTZ | NOT NULL | |
+| activo | BOOLEAN | DEFAULT true | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 31. reporte_log
+
+**Descripción**: Log de reportes programados entregados. Quién, cuándo, qué formato, si tuvo éxito.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| reporte_programado_id | UUID | FK → reporte_programado, NOT NULL | |
+| executed_at | TIMESTAMPTZ | NOT NULL | |
+| recipients | VARCHAR(500)[] | NOT NULL | Emails enviados |
+| formato | VARCHAR(10) | NOT NULL | |
+| estado | VARCHAR(20) | NOT NULL | success, failed, partial |
+| file_url | VARCHAR(500) | | URL del archivo en S3 |
+| error_message | TEXT | | Si falló,原因 |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 32. ticket_soporte
+
+**Descripción**: Tickets de soporte creados por clientes o generados por el sistema.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | |
+| cliente_id | UUID | FK → cliente, NULL | NULL si lo crea el operador |
+| operador_id | UUID | FK → tenant_user, NULL | NULL si lo crea el cliente |
+| sede_id | UUID | FK → sede, NULL | Sede relacionada |
+| registro_entrada_id | UUID | FK → registro_entrada, NULL | Transacción relacionada |
+| tipo | VARCHAR(30) | NOT NULL | incidente, queja, consulta, bug, mejora |
+| prioridad | VARCHAR(10) | DEFAULT 'media' | baja, media, alta, urgente |
+| estado | VARCHAR(20) | DEFAULT 'open' | open, in_progress, resolved, closed |
+| titulo | VARCHAR(200) | NOT NULL | |
+| descripcion | TEXT | NOT NULL | |
+| prima_respuesta_at | TIMESTAMPTZ | | |
+| resuelto_at | TIMESTAMPTZ | | |
+| cliente_calificacion | INTEGER | | 1-5 estrellas |
+| cliente_comentario | TEXT | | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+**Índices:**
+- `idx_ticket_soporte_estado` en `(estado)`
+- `idx_ticket_soporte_sede` en `(sede_id, estado)`
+
+### 33. chat_mensaje
+
+**Descripción**: Mensajes del chat de soporte en tiempo real entre cliente y operador.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| ticket_id | UUID | FK → ticket_soporte, NOT NULL | Ticket asociado |
+| remitente_type | VARCHAR(20) | NOT NULL | cliente, operador |
+| remitente_id | UUID | NOT NULL | ID del cliente o tenant_user |
+| mensaje | TEXT | NOT NULL | |
+| leido | BOOLEAN | DEFAULT false | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 34. cierre_turno
+
+**Descripción**: Registro de cierres de turno por operador con resumen financiero.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_user_id | UUID | FK → tenant_user, NOT NULL | Operador que cierra |
+| sede_id | UUID | FK → sede, NOT NULL | |
+| turno_inicio | TIMESTAMPTZ | NOT NULL | |
+| turno_fin | TIMESTAMPTZ | NOT NULL | |
+| total_efectivo_esperado | DECIMAL(12,2) | NOT NULL | Suma de pagos en efectivo esperados |
+| total_efectivo_registrado | DECIMAL(12,2) | NOT NULL | Lo que el operador dice haber contado |
+| diferencia_caja | DECIMAL(12,2) | DEFAULT 0 | efectivo_real - efectivo_esperado |
+| tiene_discrepancia | BOOLEAN | DEFAULT false | true si |diferencia| > 0.5% |
+| justificacion_discrepancia | TEXT | | |
+| foto_cierre_url | VARCHAR(500) | | Foto de evidencia del cierre |
+| hash_firma | VARCHAR(64) | NOT NULL | SHA-256 de los datos para integridad |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 35. feedback
+
+**Descripción**: Feedback y calificaciones dejados por clientes después de transacciones.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | |
+| cliente_id | UUID | FK → cliente, NOT NULL | |
+| registro_entrada_id | UUID | FK → registro_entrada, NOT NULL | |
+| calificacion | INTEGER | NOT NULL | 1-5 |
+| comentario | TEXT | | |
+| tags | VARCHAR(50)[] | | ['rapido', 'limpio', 'caro'] |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
 ## Índices Adicionales para SaaS
 
 || Tabla | Campo(s) | Tipo | Justificación |

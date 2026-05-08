@@ -290,4 +290,264 @@
 
 ---
 
-*Total: 99 requerimientos funcionales*
+## Grupo 11: Observabilidad y Monitoreo
+
+> El sistema debe ser transparente para el equipo interno y el tenant_admin. Toda anomalía se detecta antes de que el cliente la reporte.
+
+### 11.1 Health Checks y Estado del Sistema
+
+|**RF-100** | Observabilidad | El sistema debe exponer endpoints `/health` por microservicio que retornen el estado de la DB, dependencias externas y memoria | Alta
+
+|**RF-101** | Observabilidad | El sistema debe mostrar un dashboard de salud general con uptime de todos los microservicios actualizado cada 30 segundos | Alta
+
+|**RF-102** | Observabilidad | El sistema debe detectary alertar cuando un microservicio deixe de responder (critical) o su latencia exceeda 2x el baseline (warning) | Alta
+
+### 11.2 Métricas de Infraestructura
+
+|**RF-103** | Observabilidad | El sistema debe trackear uso de CPU, RAM, disco y red por cada microservicio con retención de 30 días | Alta
+
+|**RF-104** | Observabilidad | El sistema debe trackear latencia de API Gateway, tiempo de respuesta de cada endpoint y throughput (req/min) | Alta
+
+|**RF-105** | Observabilidad | El sistema debe exponer métricas en formato Prometheus (`/metrics`) para integración con Grafana | Alta
+
+### 11.3 Alertas Configurables
+
+|**RF-106** | Alertas | El sistema debe permitir que el tenant_admin configure umbrales de alerta (threshold) por métrica desde el admin | Alta
+
+|**RF-107** | Alertas | El sistema debe permitir elegir el canal de notificación de alertas: email, SMS, Slack, webhook | Alta
+
+|**RF-108** | Alertas | El sistema debe permitir configurar ventanas de silencio (maintenance windows) donde las alertas no se envíen | Media
+
+### 11.4 Dispositivos IoT: Heartbeat y Latencia
+
+|**RF-109** | IoT | El sistema debe recibir heartbeat de cada talanquera y ANPR cada 60 segundos y marcar el dispositivo como offline si no llega | Alta
+
+|**RF-110** | IoT | El sistema debe trackear la latencia comando-respuesta de cada talanquera (el tiempo entre enviar "abrir" y confirmar "abierta") y alertar si exceede 3 segundos | Alta
+
+|**RF-111** | IoT | El sistema debe generar alerta inmediata cuando una talanquera reporta estado de error o no responde durante más de 2 minutos | Alta
+
+### 11.5 Trazabilidad Distributed (Tracing)
+
+|**RF-112** | Tracing | El sistema debe asignar un `trace_id` a cada request API y propagarlo a todos los microservicios involucrados | Media
+
+|**RF-113** | Tracing | El sistema debe permitir buscar logs por `trace_id` para reconstruir el flujo completo de una transacción | Media
+
+### 11.6 Dashboard SLA
+
+|**RF-114** | SLA | El sistema debe calcular y mostrar el uptime real de cada microservicio por mes (disponible / total minutos) | Alta
+
+|**RF-115** | SLA | El sistema debe marcar en rojo los servicios cuyo uptime del mes esté por debajo del SLA contratado (99.9% para Enterprise) | Alta
+
+---
+
+## Grupo 12: Informes y Reportes Operativos
+
+### 12.1 Reportes de Ingresos
+
+|**RF-116** | Reportes | El sistema debe generar reportes de ingresos con: total, impuestos, descuentos, netos, por forma de pago, por sede | Alta
+
+|**RF-117** | Reportes | El sistema debe permitir filtrar reportes por: sede, operador, cliente, rango de fechas, tipo de vehículo | Alta
+
+|**RF-118** | Reportes | El sistema debe mostrar comparativa automática del período vs período anterior (ej: mayo vs abril) con variación % | Alta
+
+### 12.2 Reportes de Ocupación
+
+|**RF-119** | Reportes | El sistema debe generar reportes de ocupación por hora, mostrando: espacios ocupados, tasa ocupación %, duración promedio | Alta
+
+|**RF-120** | Reportes | El sistema debe generar heatmaps de ocupación por día de la semana y hora (gráfico de calor) | Media
+
+|**RF-121** | Reportes | El sistema debe proyectar ocupación futura basándose en patrones históricos (forecasting) | Media
+
+### 12.3 Reportes de Morosidad y Bloqueos
+
+|**RF-122** | Reportes | El sistema debe generar reporte de morosos: clientes con deuda pendiente, monto total, antigüedad de la deuda, veces contactado | Alta
+
+|**RF-123** | Reportes | El sistema debe generar reporte de vehículos bloqueados con razón del bloqueo y fecha | Alta
+
+### 12.4 Reportes de Operador y Productividad
+
+|**RF-124** | Reportes | El sistema debe generar reporte de productividad por operador: transacciones abiertas/cerradas, cobros, aperturas manuales, reembolsos | Alta
+
+|**RF-125** | Reportes | El sistema debe identificar anomalías: operador con reembolsos anormalmente altos o cierres de transacción sin pago | Alta
+
+### 12.5 Reportes de Cliente y Flota (B2B)
+
+|**RF-126** | Reportes | El sistema debe generar reporte de historial de cliente: visitas, tiempo promedio, gasto total, última visita, métodos de pago usados | Alta
+
+|**RF-127** | Reportes | El sistema debe generar reporte de uso de flota: vehículos de la empresa con más uso, custo por vehículo, límite de gasto剩余 | Alta
+
+### 12.6 Exportación y Programación
+
+|**RF-128** | Reportes | El sistema debe permitir exportar cualquier reporte a Excel (.xlsx), CSV y PDF | Alta
+
+|**RF-129** | Reportes | El sistema debe permitir programar reportes periódicos (diario, semanal, mensual) con entrega por email automático | Alta
+
+|**RF-130** | Reportes | El sistema debe guardar un log de reportes programados entregados con: destinatario, fecha/hora, formato, estado | Media
+
+---
+
+## Grupo 13: App Móvil del Operador
+
+### 13.1 Dashboard y Vista Principal
+
+|**RF-131** | App Operador | El sistema debe mostrar en la app móvil del operador: conteo de espacios disponibles, ocupación en tiempo real, ingresos del día | Alta
+
+|**RF-132** | App Operador | El sistema debe permitir al operador cambiar entre sedes rápidamente desde un selector en la app | Alta
+
+### 13.2 Registro Manual de Entrada/Salida
+
+|**RF-133** | App Operador | El operador puede registrar entrada manualmente con: placa (manual o seleccionada de lista), fecha/hora, observación | Alta
+
+|**RF-134** | App Operador | El operador puede registrar salida manualmente y el sistema calcula el valor a pagar mostrando un resumen al conductor | Alta
+
+|**RF-135** | App Operador | El operador puede registrar el pago asociado a una salida (efectivo, transferencia) desde la app | Alta
+
+### 13.3 Gestión de Talánqueras
+
+|**RF-136** | App Operador | El operador puede abrir/cerrar una talanquera desde la app con confirmación de gesto (doble tap) | Alta
+
+|**RF-137** | App Operador | La app muestra en tiempo real el estado de cada talanquera (abierta/cerrada/error/offline) | Alta
+
+### 13.4 Notificaciones y Alertas en App
+
+|**RF-138** | App Operador | La app recibe push notifications cuando: un vehículo lleva más de X horas sin pago, una talanquera está offline, alerta de mora | Alta
+
+|**RF-139** | App Operador | El operador puede resolver/descartar alertas desde la app y ver el historial de alertas de las últimas 24 horas | Media
+
+### 13.5 Búsqueda de Cliente y Vehículo
+
+|**RF-140** | App Operador | El operador puede buscar un cliente por nombre, placa o teléfono y ver su historial completo | Alta
+
+|**RF-141** | App Operador | El operador puede bloquear/desbloquear un vehículo desde la app con confirmación de contraseña | Alta
+
+---
+
+## Grupo 14: App Móvil del Cliente (Usuario Final)
+
+### 14.1 Disponibilidad y Reserva
+
+|**RF-142** | App Cliente | El cliente puede ver espacios disponibles en tiempo real por sede y zona | Alta
+
+|**RF-143** | App Cliente | El cliente puede pagar el parqueo anticipadamente desde la app (prepago) y seleccionar duración | Alta
+
+|**RF-144** | App Cliente | El cliente recibe recordatorio push si el tiempo pagado está por vencer y puede renovar desde la app | Alta
+
+### 14.2 Gestión de Cuenta y Vehículos
+
+|**RF-145** | App Cliente | El cliente puede agregar/editar/eliminar vehículos de su cuenta | Alta
+
+|**RF-146** | App Cliente | El cliente puede añadir métodos de pago (tarjeta, Nequi, Daviplata) y definir uno como default | Alta
+
+### 14.3 Historial y Facturas
+
+|**RF-147** | App Cliente | El cliente puede ver su historial de transacciones con detalle: fecha, sede, duración, monto, forma de pago | Alta
+
+|**RF-148** | App Cliente | El cliente puede ver y descargar sus facturas electrónicas | Alta
+
+### 14.4 Notificaciones y Promociones
+
+|**RF-149** | App Cliente | El cliente puede configurar qué notificaciones quiere recibir y por qué canal (push/SMS/email) | Alta
+
+|**RF-150** | App Cliente | El sistema envía promociones y descuentos al cliente según su perfil de uso | Media
+
+---
+
+## Grupo 15: Panel de Administración (Admin Panel)
+
+### 15.1 Gestión de Usuarios y Permisos
+
+|**RF-151** | Admin | El tenant_admin puede crear, editar, desactivar usuarios de su organización con roles específicos | Alta
+
+|**RF-152** | Admin | El tenant_admin puede asignar restricción de sedes a cada usuario (sede_ids) | Alta
+
+|**RF-153** | Admin | El tenant_admin puede ver la actividad reciente de cada usuario (último acceso, acciones realizadas) | Media
+
+### 15.2 Facturación y Suscripción
+
+|**RF-154** | Admin | El tenant_admin puede ver su suscripción actual: plan, precio, fecha de renovación, métodos de pago | Alta
+
+|**RF-155** | Admin | El tenant_admin puede descargar invoices históricas de su suscripción | Alta
+
+|**RF-156** | Admin | El tenant_admin puede hacer upgrade/downgrade de plan desde el admin | Alta
+
+### 15.3 Configuración de Dispositivos
+
+|**RF-157** | Admin | El tenant_admin puede agregar, editar y desactivar talanqueras y cámaras ANPR asociadas a una sede | Alta
+
+|**RF-158** | Admin | El tenant_admin puede ver el estado y latency de cada dispositivo en el admin | Alta
+
+### 15.4 Gestión de Espacios y Zonas
+
+|**RF-159** | Admin | El tenant_admin puede crear/editar/eliminar zonas y espacios dentro de una sede con sus tarifas asociadas | Alta
+
+|**RF-160** | Admin | El tenant_admin puede marcar espacios como: libre, ocupado, mantenimiento, reservado | Alta
+
+### 15.5 Configuración de Tarifas y Promociones
+
+|**RF-161** | Admin | El tenant_admin puede crear planes tarifarios con fracciones, topes, tarifas nocturnas | Alta
+
+|**RF-162** | Admin | El tenant_admin puede crear reglas de tarifación especial (temporada alta, hora pico) con multiplicadores | Alta
+
+|**RF-163** | Admin | El tenant_admin puede crear y gestionar promociones con límite de uso | Alta
+
+### 15.6 Webhooks e Integraciones
+
+|**RF-164** | Admin | El tenant_admin puede configurar webhooks con URL, eventos y auth headers | Alta
+
+|**RF-165** | Admin | El tenant_admin puede probar webhooks y ver historial de intentos con respuesta | Alta
+
+### 15.7 Configuración de Alertas
+
+|**RF-166** | Admin | El tenant_admin puede configurar canales de alerta (email, Slack, SMS) y sus umbrales | Alta
+
+### 15.8 Audit Log
+
+|**RF-167** | Admin | El sistema debe guardar log inmutable de todas las acciones sensibles: login, logout, cambios de config, creaciones, eliminaciones | Alta
+
+|**RF-168** | Admin | El tenant_admin puede buscar el audit log filtrando por: usuario, acción, recurso, rango de fechas | Alta
+
+---
+
+## Grupo 16: Módulo de Conciliación y Cierre de Turno
+
+### 16.1 Conciliación de Dinero
+
+|**RF-169** | Conciliación | El sistema debe calcular el total de efectivo esperado vs registrado por operador por turno | Alta
+
+|**RF-170** | Conciliación | El sistema debe marcar como "en discrepancia" toda diferencia mayor al 0.5% entre efectivo esperado y real | Alta
+
+|**RF-171** | Conciliación | El operador puede registrar una diferencia de caja con justificación y evidencia (foto del dinero contado) | Alta
+
+### 16.2 Cierre de Turno
+
+|**RF-172** | Cierre | El sistema debe permitir al operador hacer cierre de turno consolidando: ingresos, aperturas de talanquera, alertas atendidas | Alta
+
+|**RF-173** | Cierre | El sistema debe generar un reporte de cierre de turno en PDF con firma digital del operador | Alta
+
+|**RF-174** | Cierre | El sistema debe notificar al admin cuando un operador hace cierre de turno | Alta
+
+---
+
+## Grupo 17: Soporte y Atención al Cliente
+
+### 17.1 Tickets de Soporte
+
+|**RF-175** | Soporte | El cliente puede crear un ticket de soporte desde la app describiendo su problema | Alta
+
+|**RF-176** | Soporte | El operador puede ver y atender tickets de soporte de los clientes de su sede | Alta
+
+|**RF-177** | Soporte | El sistema debe trackear SLA de tickets: tiempo de primera respuesta, tiempo de resolución | Media
+
+### 17.2 Chat de Soporte
+
+|**RF-178** | Soporte | El sistema debe permitir chat en tiempo real entre cliente y operador dentro de la app | Media
+
+### 17.3 Valoración y Feedback
+
+|**RF-179** | Soporte | El sistema debe solicitar feedback al cliente después de cada transacción con opción de calificación (1-5 estrellas) y comentario | Media
+
+|**RF-180** | Soporte | El tenant_admin puede ver el NPS (Net Promoter Score) y calificación promedio por sede | Media
+
+---
+
+*Total: 180 requerimientos funcionales*
