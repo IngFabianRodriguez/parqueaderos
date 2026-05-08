@@ -60,8 +60,32 @@ El modelo de datos de ParkCore se organiza en las siguientes entidades principal
 | horario_fin | TIME | NOT NULL | Hora de cierre |
 | metadata | JSONB | DEFAULT '{}' | Configuración flexible por sede |
 | activa | BOOLEAN | DEFAULT true | Si la sede está operativa |
+| modo_operacion | VARCHAR(20) | DEFAULT 'iot' | Modo: iot (talanqueras+ANPR) o manual (sin dispositivos) |
 | created_at | TIMESTAMP | DEFAULT NOW() | Fecha de creación |
 | updated_at | TIMESTAMP | DEFAULT NOW() | Última modificación |
+
+---
+
+### 1b. configuracion_sede
+
+**Descripción**: Configuración granular por sede. Aquí vive TODO lo que el tenant_admin puede cambiar desde el admin panel — no hay valores hardcodeados. Cada sede tiene su propia instancia de esta tabla.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| sede_id | UUID | FK → sede, NOT NULL, UNIQUE | Sede dueña de esta config |
+| labels | JSONB | DEFAULT '{}' | Labels personalizables: `{ "espacio_label": "bahía", "zona_label": "sección" }` |
+| modulos_activos | JSONB | DEFAULT '{"crm":true,"notificaciones":true,"prepago":true,"flotas":false}' | Módulos activados/desactivados |
+| campos_registro | JSONB | DEFAULT '{"requiere_placa":true,"requiere_foto":false,"permite_sin_placa":true}' | Validación en registro manual |
+| fraccion_tiempo_min | INTEGER | DEFAULT 15 | Fracción mínima de cobro en minutos |
+| tope_maximo_hora | INTEGER | DEFAULT 24 | Horas máximas facturables |
+| notificacion_canales | JSONB | DEFAULT '{"entrada":["push","email"],"salida":["push","sms"],"pago":["push"]}' | Canales activos por tipo |
+| horario_batch_notif | TIME | DEFAULT '08:00' | Hora envío notificaciones batch |
+| dias_bloqueo_mora | INTEGER | DEFAULT 30 | Días para bloquear por mora |
+| monto_minimo_bloqueo | DECIMAL(10,2) | DEFAULT 50000 | Monto mínimo para activar bloqueo |
+| config_webhook | JSONB | DEFAULT '[]' | Array de webhooks: `{url, eventos[], auth_headers}` |
+| created_at | TIMESTAMP | DEFAULT NOW() | |
+| updated_at | TIMESTAMP | DEFAULT NOW() |
 
 ---
 
@@ -582,7 +606,7 @@ CREATE TABLE registro_entrada_2026_01 PARTITION OF registro_entrada
 
 **Descripción**: Log de entregas de webhooks salientes (para debugging de integraciones con pasarelas de pago y IdP SSO).
 
-|| Campo | Tipo | Constraints | Descripción |
+| Campo | Tipo | Constraints | Descripción |
 |---|---|---|---|
 | id | UUID | PK | Identificador único |
 | tenant_id | UUID | FK → tenant, NULL | Tenant (NULL para webhooks internos) |
@@ -595,6 +619,70 @@ CREATE TABLE registro_entrada_2026_01 PARTITION OF registro_entrada
 | response_code | INTEGER | | Código HTTP de respuesta |
 | response_body | TEXT | | Cuerpo de respuesta |
 | created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 24. promocion
+
+**Descripción**: Descuentos y promociones configurados por el tenant_admin con límites de uso y fechas de validez.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario |
+| nombre | VARCHAR(100) | NOT NULL | "20% off mayo 2026" |
+| tipo | VARCHAR(20) | NOT NULL | porcentaje, valor_fijo, gratis_horas |
+| valor | DECIMAL(10,2) | NOT NULL | 20.00 (porcentaje) o 5000.00 (COP) |
+| max_uso | INTEGER | | NULL = ilimitado |
+| uso_actual | INTEGER | DEFAULT 0 | Contador de usos |
+| valido_desde | DATE | NOT NULL | |
+| valido_hasta | DATE | NOT NULL | |
+| aplicable_a | JSONB | DEFAULT '["todas"]' | ['todas'] o ['zona_vip'] o ['tipo_carro'] |
+| activo | BOOLEAN | DEFAULT true | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 25. notificacion_template
+
+**Descripción**: Templates personalizables de notificación por canal y tipo de evento. Cada tenant define sus propios mensajes.
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario |
+| canal | VARCHAR(20) | NOT NULL | push, sms, email, whatsapp |
+| tipo_evento | VARCHAR(50) | NOT NULL | entrada_registrada, salida_pendiente, pago_recibido, recordatorio |
+| titulo_template | VARCHAR(200) | NOT NULL | Template del título |
+| cuerpo_template | TEXT | NOT NULL | Template del cuerpo con variables `{{variable}}` |
+| activo | BOOLEAN | DEFAULT true | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| UNIQUE | | (tenant_id, canal, tipo_evento) | |
+
+**Variables disponibles en templates:**
+- `{{cliente_nombre}}`, `{{placa}}`, `{{sede_nombre}}`, `{{zona}}`, `{{espacio}}`, `{{fecha}}`, `{{hora}}`, `{{monto}}`, `{{duracion}}`
+
+### 26. regla_tarifacion_especial
+
+**Descripción**: Reglas de tarifación especiales por temporada o evento especial (Navidad, hora pico, etc.).
+
+| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario |
+| sede_id | UUID | FK → sede, NULL | NULL = aplica a todas las sedes |
+| nombre | VARCHAR(100) | NOT NULL | "Temporada alta diciembre" |
+| multiplicador | DECIMAL(4,2) | NOT NULL | 1.5 = 150% del tarifa normal |
+| dias_semana | JSONB | DEFAULT '[0,1,2,3,4,5,6]' | Días aplicables (0=domingo) |
+| horario_inicio | TIME | | Inicio ventana horaria (NULL = todo el día) |
+| horario_fin | TIME | | Fin ventana horaria |
+| fecha_inicio | DATE | NOT NULL | |
+| fecha_fin | DATE | NOT NULL | |
+| zona_ids | UUID[] | DEFAULT '{}' | Zonas donde aplica (vacío = todas) |
+| activo | BOOLEAN | DEFAULT true | |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+**Índices:**
+- `idx_regla_tarifaria_sede_fechas` en `(sede_id, fecha_inicio, fecha_fin)`
 
 ## Índices Adicionales para SaaS
 

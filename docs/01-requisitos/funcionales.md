@@ -238,4 +238,56 @@
 
 ---
 
-*Total: 82 requerimientos funcionales*
+## Grupo 10: Configuración General del Sistema (Admin Panel)
+
+> Todo el sistema es configurable desde el panel de administración. No hay valores hardcodeados — cada parámetro de negocio vive en la base de datos y se edita desde la UI del tenant_admin o superadmin.
+
+### 10.1 Modo de Operación por Sede
+
+|**RF-083** | Config | El sistema debe permitir configurar el modo de operación por sede: `iot` (talanqueras + ANPR) o `manual` (sin dispositivos, registro por operador) | Alta
+
+|**RF-084** | Config | En modo `manual`, el operador registra entrada/salida desde la app sin dispositivos IoT | Alta
+
+|**RF-085** | Config | En modo `iot`, el sistema espera eventos de talanquera y ANPR para registrar ingresos/salidas automáticamente | Alta
+
+|**RF-086** | Config | El sistema debe permitir cambiar el modo de operación de una sede en cualquier momento sin perder datos | Alta
+
+### 10.2 Personalización de Campos y Flujos
+
+|**RF-087** | Config | El sistema debe permitir que el tenant_admin defina campos personalizados (metadata) por sede, zona y espacio desde el admin | Alta
+
+|**RF-088** | Config | El sistema debe permitir configurar labels personalizados (ej: " bahía" vs "espacio" vs "box") según el país/region del tenant | Alta
+
+|**RF-089** | Config | El sistema debe permitir activar/desactivar módulos completos desde el admin (ej: desactivar módulo CRM si el parqueadero no factura) | Alta
+
+### 10.3 Notificaciones y Canales
+
+|**RF-090** | Config | El sistema debe permitir activar/desactivar tipos de notificación por canal (push, SMS, email, WhatsApp) desde el admin | Alta
+
+|**RF-091** | Config | El sistema debe permitir personalizar templates de notificación (mensaje de entrada, salida, recordatorio de pago) desde el admin | Alta
+
+|**RF-092** | Config | El sistema debe permitir configurar horarios de envío de notificaciones batch (ej: resumen diario a las 8am) | Media
+
+### 10.4 Reglas de Negocio Configurables
+
+|**RF-093** | Config | El sistema debe permitir definir reglas de tarifación desde el admin: fracciones de tiempo, topes máximos, tarifas especiales (navidad, hora pico) | Alta
+
+|**RF-094** | Config | El sistema debe permitir configurar descuentos y promociones desde el admin con reglas de validez y uso máximo | Alta
+
+|**RF-095** | Config | El sistema debe permitir configurar políticas de bloqueo de vehículos (días de mora, monto mínimo) desde el admin | Alta
+
+### 10.5 Integraciones y Webhooks
+
+|**RF-096** | Config | El sistema debe permitir configurar webhooks salientes (URL, eventos suscritos, headers de autenticación) desde el admin | Alta
+
+|**RF-097** | Config | El sistema debe permitir probar el envío de webhooks desde el admin antes de activar | Media
+
+### 10.6 App Móvil y UX
+
+|**RF-098** | Config | El sistema debe permitir cambiar el orden de las secciones en la app móvil del operador desde el admin | Media
+
+|**RF-099** | Config | El sistema debe permitir configurar campos obligatorios/opcionales en el registro de entrada manual (ej: requiere placa, requiere foto) | Alta
+
+---
+
+*Total: 99 requerimientos funcionales*

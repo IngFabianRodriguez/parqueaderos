@@ -366,7 +366,148 @@
 - **When** termina el mes y hay transacciones de uso de esos vehículos
 - **Then** se genera una factura consolidada con: resumen de transacciones por vehículo, total a pagar, detalle por sede
 - **And** la factura se entrega al email financiero registrado
-- **And** se genera nota débito/crédito si hay ajustes
+|- **And** se genera nota débito/crédito si hay ajustes
+
+---
+
+### 31. Modo manual: operar sin talanqueras ni ANPR
+
+**Como** Operador de un parqueadero pequeño sin dispositivos IoT **quiero** registrar entradas y salidas desde la app móvil **para** usar ParkCore sin inversión en hardware.
+
+**Criterios de aceptación:**
+- **Given** la sede está configurada en modo `manual` (sin dispositivos)
+- **When** el operador abre la app y toca "Registrar entrada"
+- **Then** el sistema muestra un formulario: placa (manual o selec. cliente), fecha/hora (default ahora), observación opcional
+- **And** la entrada se registra igual que si hubiera pasado por una talanquera
+- **And** al registrar salida, el sistema calcula duración y muestra el valor a pagar
+- **And** el operador puede registrar el pago manualmente
+
+---
+
+### 32. Cambiar modo de operación de una sede
+
+**Como** Admin de tenant **quiero** cambiar el modo de operación de una sede de `iot` a `manual` (o viceversa) **para** adaptarme a mi presupuesto o infraestructura.
+
+**Criterios de aceptación:**
+- **Given** la sede tiene 6 meses de datos en modo `iot`
+- **When** el admin cambia el modo a `manual` desde el panel de configuración
+- **Then** los datos históricos se preservan intactamente
+- **And** las talanqueras y sensores quedan como "desactivados" pero no se eliminan
+- **And** los operadores ven la interfaz de modo manual al día siguiente
+
+---
+
+### 33. Personalizar labels de la interfaz
+
+**Como** Admin de tenant en Colombia **quiero** que las zonas se llamen "bahías" en lugar de "espacios" **para** que la interfaz sea familiar para mis operadores.
+
+**Criterios de aceptación:**
+- **Given** el tenant opera en Cartagena y sus operadores hablan de "bahías"
+- **When** el admin guarda la configuración: `{"espacio_label": "bahía", "zona_label": "sección", "sede_label": "parqueadero"}`
+- **Then** toda la app móvil y dashboard del tenant muestra los labels personalizados
+- **And** los reportes también usan esos labels en headers y columnas
+
+---
+
+### 34. Activar/desactivar módulos completos
+
+**Como** Admin de tenant **quiero** desactivar el módulo de CRM si mi parqueadero solo hace cobro puntual sin clientes frecuentes **para** simplificar la interfaz para mis operadores.
+
+**Criterios de aceptación:**
+- **Given** el tenant no necesita el módulo de clientes ni facturación electrónica
+- **When** el admin desactiva `modulos_activos.crm = false`
+- **Then** el menú de CRM desaparece del dashboard del tenant
+- **And** los operadores no ven opciones de registro de clientes
+- **And** el sistema sigue funcionando para operaciones básicas de entrada/salida/pago
+
+---
+
+### 35. Configurar templates de notificación
+
+**Como** Admin de tenant **quiero** personalizar el mensaje que reciben mis clientes al entrar al parqueadero **para** reforzar mi marca.
+
+**Criterios de aceptación:**
+- **Given** el tenant quiere un mensaje personalizado de bienvenida
+- **When** el admin edita el template de notificación de entrada: `"Bienvenido a {{sede_nombre}}, su espacio está en zona {{zona}}"`
+- **Then** todos los clientes que ingresan reciben ese mensaje
+- **And** el sistema permite variables: `{{sede_nombre}}`, `{{cliente_nombre}}`, `{{fecha}}`, `{{placa}}`
+- **And** existe preview en tiempo real antes de guardar
+
+---
+
+### 36. Definir reglas de tarifación especiales
+
+**Como** Admin de tenant **quiero** configurar tarifas especiales para Navidad y temporada alta **para** cobrar correctamente en fechas especiales.
+
+**Criterios de aceptación:**
+- **Given** el parqueadero quiere cobrar 1.5x en diciembre
+- **When** el admin crea una regla: `{ "nombre": "Temporada alta", "desde": "2026-12-01", "hasta": "2026-12-31", "multiplicador": 1.5, "aplicable_a": ["todas"] }`
+- **Then** durante ese periodo el sistema aplica el multiplicador automáticamente
+- **And** las facturas generadas mostram el detalle de la regla especial aplicada
+
+---
+
+### 37. Configurar webhooks para integraciones
+
+**Como** Admin de tenant (desarrollador) **quiero** recibir eventos de ParkCore en mi sistema propio **para** integrarme con el flujo de la empresa.
+
+**Criterios de aceptación:**
+- **Given** el tenant quiere que cada pago realizado envie un POST a `https://api.empresa.com/webhook/parkcore`
+- **When** el admin configura: `{ "url": "https://api.empresa.com/webhook/parkcore", "eventos": ["pago.completado", "entrada.registrada"], "auth_header": "Bearer token123" }`
+- **Then** el sistema envía webhooks a esa URL cuando ocurren esos eventos
+- **And** el admin puede ver el log de webhooks con: intentos, códigos de respuesta, cuerpos enviados
+- **And** puede reenviar manualmente un webhook fallido
+
+---
+
+### 38. Probar webhook antes de activar
+
+**Como** Admin de tenant **quiero** enviar un webhook de prueba antes de activar la integración **para** verificar que la URL receptora funciona.
+
+**Criterios de aceptación:**
+- **Given** el admin ha configurado un webhook con URL y eventos
+- **When** toca el botón "Probar conexión"
+- **Then** el sistema envía un payload de prueba a la URL configurada
+- **And** muestra en tiempo real: código HTTP respuesta, cuerpo respuesta, latencia
+- **And** si el respuesta es 2xx, muestra check verde; si no, muestra error con detalle
+
+---
+
+### 39. Configurar campos obligatorios en registro manual
+
+**Como** Admin de tenant **quiero** que el registro manual de entrada requiera sí o sí la placa **para** mantener trazabilidad even sin ANPR.
+
+**Criterios de aceptación:**
+- **Given** la sede opera en modo `manual`
+- **When** el admin configura: `{ "requiere_placa": true, "permite_sin_placa": false }`
+- **Then** el operador no puede registrar entrada sin ingresar la placa
+- **And** si intenta hacerlo, ve el mensaje: "Debe ingresar la placa para continuar"
+- **And** el historial muestra todas las placas registradas
+
+---
+
+### 40. Restringir acceso de operadores a sedes específicas
+
+**Como** Admin de empresa con múltiples sedes **quiero** que el operador de la sede Centro solo vea datos de esa sede **para** mantener independencia entre ubicaciones.
+
+**Criterios de aceptación:**
+- **Given** el operador "Juan" tiene `sede_ids = [id_sede_centro]`
+- **When** Juan inicia sesión
+- **Then** ve únicamente el dashboard de la sede Centro
+- **And** no puede ver reportes, transacciones ni configuraciones de la sede Norte
+- **And** si intenta acceder por URL directa a la sede Norte, recibe 403
+
+---
+
+### 41. Definir promoción con uso máximo
+
+**Como** Admin de tenant **quiero** crear un descuento del 20% para los primeros 100 clientes del mes **para** impulsar uso en temporada baja.
+
+**Criterios de aceptación:**
+- **Given** el admin crea promoción: `{ "nombre": "20% off mayo", "descuento_pct": 20, "max_uso": 100, "valido_desde": "2026-05-01", "valido_hasta": "2026-05-31" }`
+- **Then** el sistema permite el descuento a los primeros 100 clientes
+- **And** al llegar a 100 usos, el descuento deja de aplicarse automáticamente
+- **And** el admin ve el contador de usos en el dashboard
 
 ---
 
