@@ -391,3 +391,228 @@ CREATE TABLE registro_entrada (
 CREATE TABLE registro_entrada_2026_01 PARTITION OF registro_entrada
     FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
 ```
+
+---
+
+## Sección SaaS: Modelo de Datos Multi-Tenant
+
+### 15. tenant
+
+**Descripción**: Representa cada cuenta SaaS (cliente de la plataforma ParkCore). Cada tenant tiene su propia organización, usuarios, sedes y datos aislados.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único del tenant |
+| nombre | VARCHAR(200) | NOT NULL | Razón social o nombre de la empresa |
+| slug | VARCHAR(100) | NOT NULL, UNIQUE | URL única (`parkcore.io/{slug}`) |
+| tipo | VARCHAR(20) | DEFAULT 'trial' | trial, active, suspended, churned |
+| plan_id | UUID | FK → subscription_plan, NOT NULL | Plan de suscripción activo |
+| fecha_contrato | DATE | NOT NULL | Inicio del contrato |
+| fecha_renovacion | DATE | NOT NULL | Próximo cobro (día de facturación) |
+| billing_email | VARCHAR(255) | NOT NULL | Email para facturas y billing |
+| branding_enabled | BOOLEAN | DEFAULT true | Si tiene branding personalizado activo |
+| custom_domain | VARCHAR(255) | | Dominio propio (Enterprise+) |
+| stripe_customer_id | VARCHAR(100) | | ID del cliente en Stripe |
+| stripe_subscription_id | VARCHAR(100) | | ID de la suscripción en Stripe |
+| metadata | JSONB | DEFAULT '{}' | Configuración flexible adicional |
+| created_at | TIMESTAMP | DEFAULT NOW() | |
+| updated_at | TIMESTAMP | DEFAULT NOW() | |
+
+### 16. subscription_plan
+
+**Descripción**: Define los planes de suscripción SaaS disponibles con sus features y límites.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| nombre | VARCHAR(50) | NOT NULL, UNIQUE | starter, professional, enterprise, custom |
+| precio_mensual_cop | BIGINT | NOT NULL | Precio mensual en COP (centavos) |
+| sedes_incluidas | INTEGER | NOT NULL | Número de sedes incluidas en el plan |
+| transacciones_incluidas | INTEGER | NOT NULL | Transacciones mensuales incluidas |
+| seats_incluidos | INTEGER | NOT NULL | Usuarios incluídos |
+| features | JSONB | NOT NULL | Matriz de features booleanas |
+| rate_limit_api | INTEGER | NOT NULL | Requests por minuto para API keys |
+| limites | JSONB | NOT NULL | Límites: max_sedes, max_vehiculos, max_api_calls_mes |
+| activo | BOOLEAN | DEFAULT true | Si el plan está disponible para venta |
+| created_at | TIMESTAMP | DEFAULT NOW() | |
+| updated_at | TIMESTAMP | DEFAULT NOW() | |
+
+**Ejemplo de features JSON:**
+```json
+{
+  "multi_sede": true,
+  "sedes_max": 10,
+  "app_operador": true,
+  "bi_advanced": true,
+  "api_access": true,
+  "sso": true,
+  "white_label": false,
+  "custom_domain": true,
+  "mfa": true,
+  "audit_logs_days": 365,
+  "soporte": "priority",
+  "sla": 99.9
+}
+```
+
+### 17. tenant_user
+
+**Descripción**: Usuarios dentro de un tenant (diferente de `usuario` del sistema de gestión legacy). Cada usuario pertenece a un tenant y tiene roles scoped a ese tenant.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant al que pertenece |
+| email | VARCHAR(255) | NOT NULL | Email (único por tenant) |
+| password_hash | VARCHAR(255) | NOT NULL | Hash bcrypt |
+| nombre | VARCHAR(100) | NOT NULL | Nombre completo |
+| rol | VARCHAR(50) | NOT NULL | tenant_admin, sede_manager, sede_operator, viewer |
+| estado | VARCHAR(20) | DEFAULT 'activo' | activo, inactivo, bloqueado |
+| mfa_enabled | BOOLEAN | DEFAULT false | Si tiene 2FA activo |
+| mfa_secret | VARCHAR(255) | | Secret TOTP (cifrado) |
+| ultimo_acceso | TIMESTAMPTZ | | |
+| intentos_fallidos | INTEGER | DEFAULT 0 | |
+| bloqueado_hasta | TIMESTAMPTZ | | |
+| sede_ids | UUID[] | DEFAULT '{}' | Sedes a las que tiene acceso (vacío = todas) |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| UNIQUE | | (tenant_id, email) | |
+
+**Índices:**
+- `idx_tenant_user_tenant` en `(tenant_id)`
+- `idx_tenant_user_email_tenant` en `(tenant_id, email)`
+
+### 18. api_key
+
+**Descripción**: API keys para integraciones de terceros asociadas a un tenant. La key real se almacena como SHA-256 hash.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant propietario |
+| nombre | VARCHAR(100) | NOT NULL | Descripción: "Integración Waze" |
+| key_hash | VARCHAR(255) | NOT NULL | SHA-256 de la key completa |
+| key_prefix | VARCHAR(12) | NOT NULL | Primeros 12 chars para identificar (ej: `pk_live_xqk`) |
+| scopes | JSONB | NOT NULL | Lista de scopes: `["disponibilidad:read", "reservas:write"]` |
+| rate_limit | INTEGER | NOT NULL | Requests por minuto (override del plan si aplica) |
+| expires_at | TIMESTAMPTZ | | NULL = nunca expira |
+| last_used_at | TIMESTAMPTZ | | |
+| created_by | UUID | FK → tenant_user | Usuario que creó la key |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| revoked_at | TIMESTAMPTZ | | Si no es NULL, la key está revocada |
+| UNIQUE | | (tenant_id, nombre) | |
+
+**Índices:**
+- `idx_api_key_tenant` en `(tenant_id)`
+- `idx_api_key_prefix` en `(key_prefix)`
+
+### 19. tenant_branding
+
+**Descripción**: Configuración de marca personalizada por tenant (logo, colores, dominio, email).
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| tenant_id | UUID | FK → tenant, PK | Tenant propietario |
+| logo_url | VARCHAR(500) | | URL S3 del logo |
+| favicon_url | VARCHAR(500) | | URL S3 del favicon |
+| primary_color | VARCHAR(7) | DEFAULT '#2563EB' | Color primario (#RRGGBB) |
+| secondary_color | VARCHAR(7) | DEFAULT '#1E40AF' | Color secundario |
+| font_heading | VARCHAR(100) | DEFAULT 'Inter' | Font para títulos |
+| font_body | VARCHAR(100) | DEFAULT 'Inter' | Font para cuerpo |
+| email_from_name | VARCHAR(100) | | "Parqueadero Los Andes" |
+| email_from_address | VARCHAR(255) | | "no-reply@cliente.com" |
+| custom_css | TEXT | | CSS custom adicional (Enterprise) |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+### 20. subscription_event
+
+**Descripción**: Log de eventos significativos de suscripción para métricas SaaS y auditoría.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant afectado |
+| tipo | VARCHAR(50) | NOT NULL | trial_started, converted, upgraded, downgraded, churned, payment_failed, payment_succeeded, subscription_updated |
+| plan_id | UUID | FK → subscription_plan | Plan al momento del evento |
+| monto_cop | BIGINT | | Monto cobrado en COP (centavos) |
+| metadata | JSONB | DEFAULT '{}' | Datos adicionales: reason, error_code, etc. |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+**Índices:**
+- `idx_subscription_event_tenant_mes` en `(tenant_id, created_at)` para métricas mensuales
+- `idx_subscription_event_tipo` en `(tipo)`
+
+### 21. saas_metrics
+
+**Descripción**: Métricas SaaS calculadas y almacenadas mensualmente para reporting y dashboards de negocio.
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NULL | NULL = métrica agregada global |
+| mes | DATE | NOT NULL | Primer día del mes |
+| mrr_cents | BIGINT | | MRR en centavos de COP |
+| arr_cents | BIGINT | | ARR en centavos de COP |
+| seats_count | INTEGER | | Total de usuarios activos |
+| transacciones_count | INTEGER | | Transacciones del mes |
+| seats_billable | INTEGER | | Usuarios facturables |
+| churned | BOOLEAN | DEFAULT false | Si el tenant se dio de baja este mes |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| UNIQUE | | (tenant_id, mes) | |
+
+### 22. usage_record
+
+**Descripción**: Registros de uso para billing por excedente (transacciones adicionales, sedes extra, API calls).
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NOT NULL | Tenant |
+| tipo | VARCHAR(30) | NOT NULL | transacciones, sedes_extra, api_calls, almacenamiento_gb |
+| cantidad | INTEGER | NOT NULL | Cantidad consumed |
+| periodo | DATE | NOT NULL | Mes del uso (primer día) |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+| UNIQUE | | (tenant_id, tipo, periodo) | |
+
+**Índices:**
+- `idx_usage_record_tenant_period` en `(tenant_id, periodo)`
+
+### 23. webhook_delivery
+
+**Descripción**: Log de entregas de webhooks salientes (para debugging de integraciones con pasarelas de pago y IdP SSO).
+
+|| Campo | Tipo | Constraints | Descripción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| tenant_id | UUID | FK → tenant, NULL | Tenant (NULL para webhooks internos) |
+| endpoint_url | VARCHAR(500) | NOT NULL | URL destino |
+| event_type | VARCHAR(50) | NOT NULL | Tipo de evento enviado |
+| payload | JSONB | NOT NULL | Cuerpo del webhook |
+| attempt_count | INTEGER | DEFAULT 0 | Intentos realizados |
+| status | VARCHAR(20) | DEFAULT 'pending' | pending, delivered, failed |
+| last_attempt_at | TIMESTAMPTZ | | |
+| response_code | INTEGER | | Código HTTP de respuesta |
+| response_body | TEXT | | Cuerpo de respuesta |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | |
+
+## Índices Adicionales para SaaS
+
+|| Tabla | Campo(s) | Tipo | Justificación |
+|---|---|---|---|---|
+| tenant | slug | B-tree, UNIQUE | Lookup por slug |
+| tenant | stripe_customer_id | B-tree | Webhook Stripe |
+| tenant_user | tenant_id | B-tree | Lista de usuarios por tenant |
+| tenant_user | email | B-tree, UNIQUE global | Login SSO |
+| api_key | key_prefix | B-tree | Identificar key en requests |
+| subscription_event | tenant_id, created_at | B-tree | Métricas por tenant |
+| subscription_event | tipo | B-tree | Filtrar por tipo de evento |
+| saas_metrics | tenant_id, mes | B-tree, UNIQUE | Unique por tenant/mes |
+| usage_record | tenant_id, periodo | B-tree | Tracking mensual |
+
+## Particionamiento Adicional SaaS
+
+- **subscription_event**: partición por `created_at` (mensual, retención 36 meses)
+- **saas_metrics**: partición por `mes` (mensual, retención 60 meses)
+- **webhook_delivery**: partición por `created_at` (mensual, retención 6 meses)
+- **usage_record**: partición por `periodo` (mensual, retención 24 meses)

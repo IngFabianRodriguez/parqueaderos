@@ -50,11 +50,11 @@ Los parqueaderos que sobreviven sin datos confiables toma decisiones de precio, 
 
 ---
 
-## Arquitectura modular de ParkCore
+## Arquitectura modular de ParkCore (SaaS Multi-Tenant)
 
 ParkCore se compone de los siguientes módulos funcionales, cada uno con responsabilidades bien definidas y diseñado para operar de forma independiente o integrada con los demás:
 
-| Módulo | Descripción |
+|| Módulo | Descripción |
 |---|---|
 | **ANPR** | Recognition engine that captures license plates at entry/exit points using camera feeds. Supports multiple camera configurations per lane, multiple lanes per site. |
 | **Disponibilidad en tiempo real** | Motor de ocupación que mantiene actualizada la disponibilidad de espacios por sede, con lógica de conteo de entrada/salida y capacidad configurable. |
@@ -62,25 +62,32 @@ ParkCore se compone de los siguientes módulos funcionales, cada uno con respons
 | **Control de talanquera IoT** | Actor IoT que se comunica con relés y barreras físicas a través de MQTT. Abre/cierra según reglas de negocio predefinidas. Soporta fallback manual. |
 | **Dashboard BI** | Interfaz visual con métricas clave, gráficos de tendencia, reportes exportables y alertas configurables. Orientado a operadores y gerentes. |
 | **App Operador** | Aplicación móvil para que el personal en sitio gestione excepciones, valide documentos y atienda incidentes sin necesidad de estar en un terminal fijo. |
-| **App Cliente** | Aplicación para usuarios finales que permite consulta de saldo, historial de الاستخدام، pagos anticipados y reservas (según módulo de reservas). |
+| **App Cliente** | Aplicación para usuarios finales que permite consulta de saldo, historial de uso, pagos anticipados y reservas (según módulo de reservas). |
+| **Tenant Management** | Gestión de cuentas SaaS: subscripciones, feature flags, branding, usuarios por organización, custom domain, SSO/SAML |
+| **Billing Service** | Motor de facturación SaaS: integración Stripe, usage tracking, dunning, invoices internos, métricas MRR/churn/NRR |
+| **API Gateway** | Routing, autenticación JWT, rate limiting por tenant/plan/API key, circuit breaker |
 
 ---
 
-## Stack tecnológico tentativo
+## Stack tecnológico tentativo (SaaS Multi-Tenant)
 
 La siguiente tabla muestra las tecnologías candidatas para cada capa del sistema. La selección final dependerá de los resultados de la fase de prototipado y de las capacidades del equipo de desarrollo:
 
-| Capa | Tecnología | Rol |
+|| Capa | Tecnología | Rol |
 |---|---|---|
 | **Backend** | Python / FastAPI | API REST/GraphQL, lógica de negocio, procesamiento de eventos, middleware de integración con dispositivos IoT |
-| **Frontend web** | React o Angular | Dashboard BI, consola de administración, portal de reportes |
-| **Base de datos principal** | PostgreSQL | Almacenamiento transaccional: vehículos, registros, tarifas, clientes, transacciones |
-| **Cache y real-time** | Redis | Disponibilidad en tiempo real, pub/sub para eventos de talanquera, sesión de usuarios |
+| **Frontend web** | React o Angular | Dashboard BI, consola de administración, portal de reportes, gestión de tenant y billing |
+| **Base de datos principal** | PostgreSQL | Almacenamiento transaccional: vehículos, registros, tarifas, clientes, transacciones, tenants, suscripciones |
+| **Cache y real-time** | Redis | Disponibilidad en tiempo real, pub/sub para eventos de talanquera, sesión de usuarios, refresh token blacklist |
 | **Broker IoT** | MQTT (Mosquitto o EMQX) | Comunicación con relés de talanquera, cámaras, sensores de occupancy |
 | **ANPR** | Integración con motor ANPR de terceros (OpenALPR, Plate Recognizer, o solución custom con OpenCV/TensorFlow) | Reconocimiento de matrículas desde flujo de video |
 | **Pasarela de pagos** | API dePSD2 o proveedor local (Mercado Pago, PayU, Stripe, dLocal) | Procesamiento de pagos electrónicos |
+| **Billing Engine** | Stripe | Suscripciones, usage-based billing, dunning, webhooks |
 | **Contenedores** | Docker + Docker Compose (desarrollo), Kubernetes (producción) | Despliegue, escalabilidad y orquestación |
 | **CI/CD** | GitHub Actions o GitLab CI | Integración y entrega continua |
+| **Secrets Management** | HashiCorp Vault o AWS Secrets Manager | Gestión de API keys, contraseñas, certificados |
+| **Email transaccional** | SendGrid o SES | Notificaciones, facturas, emails de onboarding |
+| **SSO/SAML** | python3-saml o Authlib | Integración con Okta, Azure AD, Google Workspace |
 
 ---
 
