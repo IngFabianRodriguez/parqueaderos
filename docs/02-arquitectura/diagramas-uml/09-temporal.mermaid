@@ -1,0 +1,31 @@
+%% Diagrama Temporal — Timing del proceso de salida
+%% ParkCore: Flujo de Salida — Timing de Apertura de Talanquera
+%% Este flujo es crítico para el rendimiento (< 1 segundo objetivo)
+
+gantt
+    title Flujo de Salida — Timing de Apertura de Talanquera
+    dateFormat X
+    axisFormat %s s
+
+    section Cliente
+    Llega a salida           :done, cliente_llega, 0, 0.2s
+
+    section Cámara ANPR
+    Captura placa           :done, captura_placa, 0, 0.3s
+
+    section Sistema
+    Busca en BD             :done, busca_bd, 0.3, 0.2s
+    Verifica pago confirmado :active, verifica_pago, 0.5, 0.1s
+
+    section Control
+    Señal a relé            :crit, senial_rele, 0.6, 0.1s
+
+    section Talanquera
+    Abre talanquera         :crit, abre_talanquera, 0.7, 0.2s
+
+    section Cliente
+    Vehículo sale           :done, vehiculo_sale, 0.9, 1.1s
+
+    %% Línea de referencia objetivo
+    section Meta
+    Objetivo < 1 segundo    :milestone, objetivo, 1.0, 0s

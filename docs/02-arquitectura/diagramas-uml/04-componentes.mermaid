@@ -1,0 +1,49 @@
+%% Diagrama de Componentes — Arquitectura de alto nivel ParkCore
+%% Plataforma de gestión de parqueaderos
+
+package "Capa de Presentación" {
+    [ClienteWeb] as cw
+    [AppMovil] as am
+}
+
+package "Capa de Negocio" {
+    [APIGateway] as api
+    [ServicioANPR] as sanpr
+    [ServicioDisponibilidad] as sdisp
+    [ServicioPagos] as spagos
+    [ServicioTalanquera] as stalq
+    [ServicioNotificaciones] as sntf
+}
+
+package "Capa de Datos" {
+    [BaseDatos\nPostgreSQL] as bd
+    [Cache\nRedis] as cache
+    [BrokerMQTT] as mqtt
+}
+
+package "Dispositivos IoT" {
+    [Cámara ANPR] as cam
+    [Talanquera\nElectrónica] as talq
+    [Sensor\nOcupación] as sensor
+    [GatewayMQTT\nLocal] as gw
+}
+
+%% Conexiones entre componentes
+cw --> api : HTTPS/REST
+am --> api : HTTPS/REST
+api --> sanpr : gRPC
+api --> sdisp : REST
+api --> spagos : REST
+api --> stalq : MQTT
+api --> sntf : REST
+
+sanpr --> cam : RTSP
+stalq --> talq : MQTT
+sdisp --> sensor : HTTP
+cache --> bd : JDBC
+mqtt --> gw : TCP/IP
+api --> bd : SQL
+api --> cache : Redis Protocol
+spagos --> mqtt : Publish
+stalq --> mqtt : Subscribe
+sntf --> mqtt : Publish

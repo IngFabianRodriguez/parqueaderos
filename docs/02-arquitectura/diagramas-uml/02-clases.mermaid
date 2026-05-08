@@ -1,0 +1,204 @@
+%% Modelo de Clases — ParkCore
+%% Plataforma de gestión de parqueaderos
+
+classDiagram
+    %% Clase Sede
+    class Sede {
+        -String idSede
+        -String nombre
+        -String direccion
+        -String ciudad
+        -Integer capacidadTotal
+        -Boolean activa
+        +getIdSede() String
+        +getNombre() String
+        +setNombre(nombre) void
+        +getCapacidadTotal() Integer
+        +consultarDisponibilidad() Integer
+        +agregarZona(zona) void
+        +obtenerZonas() List~Zona~
+    }
+
+    %% Clase Zona
+    class Zona {
+        -String idZona
+        -String nombre
+        -TipoZona tipo
+        -Integer capacidad
+        -Sede sede
+        +getIdZona() String
+        +getCapacidad() Integer
+        +setCapacidad(capacidad) void
+        +obtenerEspacios() List~Espacio~
+        +contarDisponibles() Integer
+    }
+
+    %% Clase Espacio
+    class Espacio {
+        -String idEspacio
+        -String codigo
+        -EstadoEspacio estado
+        -Zona zona
+        +getIdEspacio() String
+        +getCodigo() String
+        +getEstado() EstadoEspacio
+        +ocupar() void
+        +liberar() void
+    }
+
+    %% Clase Vehiculo
+    class Vehiculo {
+        -String idVehiculo
+        -String placa
+        -String marca
+        -String modelo
+        -String color
+        -Boolean bloqueado
+        -Cliente cliente
+        +getIdVehiculo() String
+        +getPlaca() String
+        +setBloqueado(bloqueado) void
+        +isBloqueado() Boolean
+        +obtenerRegistros() List~RegistroEntrada~
+    }
+
+    %% Clase RegistroEntrada
+    class RegistroEntrada {
+        -String idRegistro
+        -DateTime fechaHoraEntrada
+        -String imagenPlaca
+        -Vehiculo vehiculo
+        -Sede sede
+        -Espacio espacioAsignado
+        +getIdRegistro() String
+        +getFechaHoraEntrada() DateTime
+        +getVehiculo() Vehiculo
+        +registrar() void
+    }
+
+    %% Clase RegistroSalida
+    class RegistroSalida {
+        -String idRegistroSalida
+        -DateTime fechaHoraSalida
+        -Integer duracionMinutos
+        -RegistroEntrada registroEntrada
+        -Pago pago
+        +getIdRegistroSalida() String
+        +getDuracionMinutos() Integer
+        +calcularDuracion() Integer
+        +registrar() void
+    }
+
+    %% Clase Pago
+    class Pago {
+        -String idPago
+        -BigDecimal monto
+        -MetodoPago metodo
+        -EstadoPago estado
+        -DateTime fechaPago
+        -RegistroEntrada registroEntrada
+        -Cliente cliente
+        +getIdPago() String
+        +getMonto() BigDecimal
+        +setEstado(estado) void
+        +confirmar() Boolean
+        +getFechaPago() DateTime
+    }
+
+    %% Clase Cliente
+    class Cliente {
+        -String idCliente
+        -String nombre
+        -String telefono
+        -String email
+        -List~Vehiculo~ vehiculos
+        -List~Pago~ pagos
+        +getIdCliente() String
+        +getNombre() String
+        +agregarVehiculo(vehiculo) void
+        +obtenerVehiculos() List~Vehiculo~
+        +realizarPago(pago) void
+    }
+
+    %% Clase PlanTarifario
+    class PlanTarifario {
+        -String idPlan
+        -String nombre
+        -BigDecimal precioBase
+        -BigDecimal precioPorMinuto
+        -BigDecimal precioPorHora
+        - TipoPlan tipo
+        +getIdPlan() String
+        +getPrecioBase() BigDecimal
+        +calcularMonto(duracionMinutos) BigDecimal
+        +aplicarDescuento(monto) BigDecimal
+    }
+
+    %% Clase Talanquera
+    class Talanquera {
+        -String idTalanquera
+        -TipoTalanquera tipo
+        -String ipDispositivo
+        -EstadoTalanquera estado
+        -Sede sede
+        +getIdTalanquera() String
+        +abrir() Boolean
+        +cerrar() void
+        +getEstado() EstadoTalanquera
+        +enviarSenialApertura() void
+    }
+
+    %% Clase Notificacion
+    class Notificacion {
+        -String idNotificacion
+        -TipoNotificacion tipo
+        -String mensaje
+        -DateTime fechaEnvio
+        -Boolean leida
+        -Cliente cliente
+        +getIdNotificacion() String
+        +enviar() void
+        +marcarLeida() void
+    }
+
+    %% Clase Usuario
+    class Usuario {
+        -String idUsuario
+        -String nombre
+        -String username
+        -String passwordHash
+        -Boolean activo
+        -Rol rol
+        -Sede sede
+        +getIdUsuario() String
+        +getUsername() String
+        +autenticar(password) Boolean
+        +tienePermiso(permiso) Boolean
+    }
+
+    %% Clase Rol
+    class Rol {
+        -String idRol
+        -String nombre
+        -List~String~ permisos
+        +getIdRol() String
+        +getNombre() String
+        +agregarPermiso(permiso) void
+        +tienePermiso(permiso) Boolean
+    }
+
+    %% Relaciones entre clases
+    Sede "1" o-- "1..n" Zona : tiene
+    Zona "1" o-- "1..n" Espacio : contiene
+    Sede "1" o-- "1..n" RegistroEntrada : registra
+    RegistroEntrada "1" -- "1" Vehiculo : pertenece
+    RegistroSalida "1" -- "1" Vehiculo : pertenece
+    RegistroEntrada "1" -- "1" Pago : genera
+    Cliente "1" o-- "1..n" Vehiculo : posee
+    Cliente "1" o-- "1..n" Pago : realiza
+    PlanTarifario "1" o-- "1..n" Sede : aplica a
+    RegistroEntrada "1" -- "0..1" Espacio : ocupa
+    Talanquera "1" -- "0..1" Sede : pertenece
+    Usuario "1" -- "1" Rol : tiene
+    Usuario "1" -- "0..1" Sede : administra
+    Notificacion "1" -- "0..1" Cliente : envia a

@@ -1,0 +1,60 @@
+%% Diagrama de Secuencia — Flujo principal entrada-pago-salida
+%% ParkCore: Proceso completo de un vehículo
+
+sequenceDiagram
+    participant Cliente
+    participant ANPR
+    participant Sistema
+    participant Talanquera
+
+    %% Fase 1: Entrada
+    Cliente->>+ANPR: Vehículo llega a entrada
+    ANPR->>ANPR: Detecta movimiento
+    ANPR->>ANPR: Captura imagen placa
+    ANPR-->>+Sistema: Envía placa "ABC-123" + timestamp
+    Sistema->>Sistema: Busca vehículo en BD
+    Sistema->>Sistema: Registra entrada (RE-001)
+    Sistema->>Sistema: Asigna espacio disponible
+    Sistema->>Sistema: Actualiza dashboard disponibilidad
+    Sistema-->>-Cliente: Confirma entrada (espacio A-12)
+    ANPR-->>Talanquera: Señal abrir
+    Talanquera->>Talanquera: Abre talanquera entrada
+    Talanquera-->>Cliente: Barrera levantada
+    Cliente->>Cliente: Estaciona vehículo
+
+    deactivate Cliente
+    deactivate ANPR
+    deactivate Talanquera
+
+    %% Fase 2: Espera (estacionado)
+
+    %% Fase 3: Pago
+    Note over Cliente,Sistema: Cliente decide pagar
+    Cliente->>+Sistema: Solicita pago (app/cajero)
+    Sistema->>Sistema: Calcula tarifa estimada
+    Sistema-->>Cliente: Muestra monto a pagar
+    Cliente->>Sistema: Confirma pago
+    Sistema->>Sistema: Procesa pago (pasarela)
+    Sistema->>Sistema: Registra pago (P-001)
+    Sistema-->>Cliente: Pago confirmado
+
+    deactivate Sistema
+
+    %% Fase 4: Salida
+    Note over Cliente,Talanquera: Cliente se dirige a salida
+    Cliente->>+ANPR: Llega a talanquera salida
+    ANPR->>ANPR: Captura imagen placa
+    ANPR-->>+Sistema: Envía placa "ABC-123"
+    Sistema->>Sistema: Busca registro entrada activo
+    Sistema->>Sistema: Verifica pago confirmado
+    Sistema->>Sistema: Calcula duración total
+    Sistema->>Sistema: Registra salida (RS-001)
+    Sistema-->>-Talanquera: Señal abrir
+    Talanquera->>Talanquera: Abre talanquera salida
+    Talanquera-->>Cliente: Barrera levantada
+    Cliente->>Cliente: Sale del parqueadero
+
+    deactivate Cliente
+    deactivate ANPR
+    deactivate Talanquera
+    deactivate Sistema

@@ -1,0 +1,32 @@
+%% Diagrama de Estados — Ciclo de vida de un vehículo en el parqueadero
+%% ParkCore: Estados desde llegada hasta salida definitiva
+
+stateDiagram-v2
+    [*] --> Fuera: Vehículo fuera del parqueadero
+
+    Fuera --> DetectadoEntrada: Llegada detectada\npor sensor/cámara
+
+    DetectadoEntrada --> EsperandoTalanqueraEntrada: Placa leída\ncorrectamente
+
+    EsperandoTalanqueraEntrada --> Estacionado: Entrada confirmada\ny espacio asignado
+
+    state Estacionado {
+        [*] --> Estacionado
+        Estacionado --> [*]
+    }
+
+    Estacionado --> EsperandoPago: Cliente inicia\nproceso de pago
+
+    EsperandoPago --> Pagado: Pago confirmado\npor pasarela
+
+    Pagado --> EsperandoTalanqueraSalida: Validación\ncompletada
+
+    EsperandoTalanqueraSalida --> Fuera: Salida exitosa\nvehículo abandona
+
+    Fuera --> [*]
+
+    %% Nota sobre estados de error/bloqueo
+    state Fuera {
+        [*] --> Bloqueado: Placa bloqueada\n(moroso)
+        Bloqueado --> [*]: Admin desbloquea
+    }

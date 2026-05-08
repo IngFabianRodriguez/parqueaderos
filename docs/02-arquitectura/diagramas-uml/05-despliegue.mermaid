@@ -1,0 +1,52 @@
+%% Diagrama de Despliegue — Infraestructura ParkCore
+%% Nodos y relaciones de comunicación
+
+node "NavegadorWeb\n(Chrome)" as browser {
+    artifact "Frontend SPA\n(React/Vue)"
+}
+
+node "AppMovil\n(iOS/Android)" as app {
+    artifact "App ParkCore\n(Híbrida)"
+}
+
+node "ServidorAPI\n(Docker/K8s)" as server {
+    artifact "APIGateway\nNode.js"
+    artifact "Servicios\nMicroservicios"
+    artifact "Servicio ANPR\nPython/TensorFlow"
+}
+
+node "BaseDeDatos\n(PostgreSQL en AWS RDS)" as db {
+    artifact "ParkCore_DB\ntablas, índices"
+    artifact "Réplica Read"
+}
+
+node "Redis\n(ElastiCache)" as redis {
+    artifact "Cache Sessions"
+    artifact "Cache Disponibilidad"
+}
+
+node "BrokerMQTT\n(Mosquitto)" as broker {
+    artifact "Topic: talanquera/#
+    Topic: anpr/captures"
+}
+
+node "DispositivoEnSede\n(Cámara IP, Talanquera PLC)" as iot {
+    artifact "Cámara ANPR"
+    artifact "Controladora Talanquera"
+    artifact "Sensores IoT"
+}
+
+node "GatewayMQTT\n(Local sede)" as mqttgw {
+    artifact "Bridge MQTT"
+    artifact "Edge Agent"
+}
+
+%% Relaciones de comunicación
+browser -- server : HTTPS/WSS
+app -- server : HTTPS/MQTT
+server -- db : JDBC/PostgreSQL
+server -- redis : Redis Protocol
+server -- broker : MQTT
+broker -- mqttgw : MQTT
+mqttgw -- iot : RTSP, Modbus
+server ..> mqttgw : datos dispositivos
