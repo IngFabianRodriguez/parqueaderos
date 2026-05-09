@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  anpr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anpr-service
+    ports:
+      - "8006:8006"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://parqueaderos:parqueaderos@postgres:5432/parqueaderos
+      - REDIS_URL=redis://redis:6379/2
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SERVICE_PORT=8006
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://telemetry:4317
+      - OTEL_SERVICE_NAME=anpr-service
+      # ANPR-specific
+      # - LPR_MODEL_PATH=/models/lprnet.onnx
+      # - LPR_CONFIDENCE_THRESHOLD=0.7
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  - parqueaderos-net

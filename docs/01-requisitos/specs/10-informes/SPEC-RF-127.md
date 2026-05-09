@@ -1,0 +1,53 @@
+# SPEC-10-informes-127 — El sistema debe generar un reporte de uso de flota para empresas clientas (B2...
+
+## Metadata
+- **RF origen**: RF-127
+- **Módulo**: 10-informes
+- **Prioridad**: Alta
+- **Servicios**: No especificados
+
+---
+
+## User Story
+**Como** administrador de una empresa con flota de vehículos **quiero** consultar el reporte de uso de los vehículos de mi empresa **para** conocer cuáles son los más utilizados, el costo por vehículo y verificar que no se exceda el límite de gasto mensual establecido en mi contrato. ---
+
+## Objetivo
+El sistema debe generar un reporte de uso de flota para empresas clientas (B2B) que muestre: vehículos ordenados por cantidad de visitas, costo acumulado por vehículo, límite de gasto configurado por contrato, porcentaje de uso del límite, y comparativo de uso entre períodos. Este reporte es consumido por el portal B2B del cliente. ---
+
+## Comportamiento Específico
+
+### Happy Path
+1. El usuario accede al portal B2B y selecciona la opción "Reporte de Uso de Flota". 2. El usuario selecciona el período (mes actual por defecto) y optionally filters by sede. 3. El sistema valida que el usuario esté autorizado para la empresa y que el contrato esté activo. 4. El sistema consulta: a. **Vehículos activos**: Lista de vehículos de la flota con al menos una visita en el período. b. **Conteo de visitas por vehículo**: Cantidad de transacciones por placa. c. **Costo por vehículo**: Sumatoria de montos pagados por cada vehículo. d. **Límite de gasto**: Valor configurado en el contrato de flota. e. **Porcentaje de uso**: `(costo_total / límite) * 100`. 5. El sistema presenta los resultados ordenados por cantidad de visitas (descendente). 6. Se incluye un comparativo con el período anterior (mes anterior) para contextualizar. ---
+
+### Edge Cases
+| Escenario | Comportamiento |
+|-----------|----------------|
+| (ninguno definido) | — |
+
+## Datos de Entrada
+| Campo | Tipo | Descripción | |-------|------|-------------| | empresa_id | UUID | Identificador de la empresa | | empresa_nombre | String | Nombre de la empresa | | contrato_id | UUID | Identificador del contrato activo | | límite_gasto_mensual | Decimal | Límite de gasto configurado (COP) | | consumo_total | Decimal | Sumatoria de gastos de todos los vehículos en el período (COP) | | porcentaje_uso | Decimal | Porcentaje del límite consumido | | estado_contrato | Enum | ACTIVO, SUSPENDIDO, CANCELADO, VENCIDO | | vehiculos | Array | Lista de vehículos con métricas individuales | **Datos por vehículo dentro del array `vehiculos`**: | Campo | Tipo | Descripción | |-------|------|-------------| | vehiculo_id | UUID | Identificador del vehículo | | placa | String | Placa del vehículo | | marca | String | Marca del vehículo | | modelo | String | Modelo del vehículo | | total_visitas | Integer | Cantidad de visitas en el período | | tiempo_total_minutos | Integer | Sumatoria de tiempo de estadía | | costo_total | Decimal | Gasto total del vehículo (COP) | | visitas_periodo_anterior | Integer | Visitas en el mes anterior (comparativo) | | costo_periodo_anterior | Decimal | Gasto del mes anterior (comparativo) | | variacion_visitas_porcentaje | Decimal | Cambio porcentual vs. mes anterior | ---
+
+## Datos de Salida
+| Campo | Tipo | Descripción | |-------|------|-------------| | empresa_id | UUID | Identificador de la empresa | | empresa_nombre | String | Nombre de la empresa | | contrato_id | UUID | Identificador del contrato activo | | límite_gasto_mensual | Decimal | Límite de gasto configurado (COP) | | consumo_total | Decimal | Sumatoria de gastos de todos los vehículos en el período (COP) | | porcentaje_uso | Decimal | Porcentaje del límite consumido | | estado_contrato | Enum | ACTIVO, SUSPENDIDO, CANCELADO, VENCIDO | | vehiculos | Array | Lista de vehículos con métricas individuales | **Datos por vehículo dentro del array `vehiculos`**: | Campo | Tipo | Descripción | |-------|------|-------------| | vehiculo_id | UUID | Identificador del vehículo | | placa | String | Placa del vehículo | | marca | String | Marca del vehículo | | modelo | String | Modelo del vehículo | | total_visitas | Integer | Cantidad de visitas en el período | | tiempo_total_minutos | Integer | Sumatoria de tiempo de estadía | | costo_total | Decimal | Gasto total del vehículo (COP) | | visitas_periodo_anterior | Integer | Visitas en el mes anterior (comparativo) | | costo_periodo_anterior | Decimal | Gasto del mes anterior (comparativo) | | variacion_visitas_porcentaje | Decimal | Cambio porcentual vs. mes anterior | ---
+
+## Headers Injectados (del COMP-001)
+- X-User-Id: UUID del usuario autenticado
+- X-Rol: tenant_admin | sede_manager | operador | cliente
+- X-Tenant-Id: UUID del tenant
+- X-Sede-Id: UUID de la sede (si aplica)
+- X-Trace-ID: UUID v4 para trazabilidad distributed
+- X-Request-Timestamp: unix timestamp
+
+## Criterios de Aceptación
+1. El reporte muestra todos los vehículos de la flota con sus métricas de uso y costo. 2. El porcentaje de uso del límite se calcula correctamente: `(suma_costos / límite) * 100`. 3. Los vehículos se ordenan por cantidad de visitas descendente por defecto. 4. El comparativo con el período anterior muestra variación porcentual por vehículo. 5. Los vehículos que exceden su proporcional del límite (sobre 80% del límite por vehículo) se marcan visualmente. 6. El reporte es exportable a Excel (.xlsx), CSV y PDF. 7. El sistema responde en < 5 segundos para flotas de hasta 500 vehículos. 8. Si la empresa tiene múltiples contratos, se usa el contrato activo con fecha más reciente. ---
+
+## Endpoints
+- `GET /api/v1/reports/fleet/usage` — Genera el reporte de uso de flota - `GET /api/v1/reports/fleet/usage/export` — Exporta el reporte - `GET /api/v1/contracts/{contract_id}/limit` — Consulta el límite configurado ---
+
+## Health Check
+- `GET /health` → `{ "status": "ok" }`
+
+
+## Notas
+
+- El "límite proporcional por vehículo" se calcula como: `(límite_gasto_mensual / cantidad_vehículos_en_flota)`. Un vehículo se marca como en riesgo cuando su costo individual supera este valor. - Las transacciones de vehículos no reconocidos (no están en la flota registrada) no se incluyen en este reporte aunque provengan de la misma placa. - El estado del contrato se lee del contrato activo con la fecha más reciente; si hay múltiples contratos vigentes, se usa el de mayor límite. - Este reporte solo incluye vehículos de la flota registrada; no incluye vehículos eventuales que hayan entrado como clientes normales.

@@ -1,0 +1,3 @@
+"""Reports Service for Parqueaderos SaaS."""
+
+__version__ = "0.1.0"

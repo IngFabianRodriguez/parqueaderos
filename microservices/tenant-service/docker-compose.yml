@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  tenant-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tenant-service
+    ports:
+      - "8002:8002"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/parqueaderos
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SERVICE_NAME=tenant-service
+      - SERVICE_PORT=8002
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME=tenant-service
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - parqueaderos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  parqueaderos-network:
+    external: true
