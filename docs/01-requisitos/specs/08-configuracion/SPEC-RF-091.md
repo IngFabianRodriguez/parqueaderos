@@ -55,3 +55,24 @@ El sistema debe permitir al `tenant_admin` exportar la configuración completa (
 6. Los IDs se reemplazan por nuevos IDs en el destino; las referencias cruzadas se actualizan.
 7. Los roles predefinidos del sistema no se importan.
 8. La importación genera un log detallado en `import_export_logs`.
+
+## Datos de Entrada
+- **Exportación:**
+  - `scope` (string): Alcance — `full_tenant`, `single_venue`, `modules`.
+  - `site_id` (UUID, opcional): ID de la sede si scope=single_venue.
+  - `modules` (array[string], opcional): Lista de módulos a exportar si scope=modules.
+  - `include_user_data` (boolean): Si incluye datos de usuario (opcional).
+- **Importación:**
+  - `file` (file): Archivo JSON o ZIP con la configuración.
+  - `merge_strategy` (object): Estrategia por módulo — `skip`, `overwrite`, `keep_both`.
+
+## Datos de Salida
+- **Exportación:**
+  - `export_file` (file): Archivo JSON/ZIP generado para descarga.
+  - `schema_version` (string): Versión del schema para validación en importación.
+  - `exported_modules` (array[string]): Lista de módulos exportados.
+- **Importación:**
+  - `import_preview` (object): Preview con módulos, cantidad de registros, conflictos.
+  - `id_mapping` (object): Mapeo `old_id -> new_id` para referencias cruzadas.
+  - `import_export_logs.id` (UUID): ID del log de importación.
+  - Evento: `CONFIG_IMPORTED` publicado tras la importación.

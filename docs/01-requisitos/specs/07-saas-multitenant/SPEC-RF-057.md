@@ -61,5 +61,26 @@ El sistema debe retornar un error HTTP 403 (Forbidden) con cuerpo JSON estructur
 - Todos los endpoints que correspondan a features con feature flags
 - `GET /api/v1/tenants/{tenant_id}/features` — Consulta de features activas
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| feature_id | string | Identificador de la feature que se intenta acceder | Sí |
+| tenant_plan | string | Plan actual del tenant | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| error | string | `feature_not_included` |
+| code | string | `PLAN_FEATURE_REQUIRED` |
+| message | string | Mensaje legible: "Esta funcionalidad requiere un plan superior." |
+| feature | string | Identificador de la feature bloqueada |
+| feature_name | string | Nombre visible de la feature (ej: "Reportes Avanzados de BI") |
+| current_plan | string | Plan actual del tenant |
+| required_plan | string | Plan mínimo necesario (ej: `Professional`) |
+| upgrade_url | string | URL para hacer upgrade (ej: `/settings/subscription/upgrade`) |
+| can_trial | boolean | Si hay trial disponible para esta feature |
+| contact_sales_url | string | URL de contacto con ventas (solo para planes Custom) |
+| status_code | integer | Siempre 403 Forbidden |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

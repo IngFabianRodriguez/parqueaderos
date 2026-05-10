@@ -59,5 +59,24 @@ El sistema debe activar inmediatamente las features del nuevo plan cuando el upg
 - `POST /api/v1/webhooks/stripe` — Confirmación de pago de upgrade
 - `GET /api/v1/tenants/{tenant_id}/features` — Consulta de features activas post-upgrade
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| tenant_id | UUID | Identificador del tenant que hace upgrade | Sí |
+| new_plan_id | string | Identificador del nuevo plan (ej: `professional`, `enterprise`) | Sí |
+| stripe_subscription_id | string | ID de la suscripción en Stripe | Sí |
+| payment_status | string | Estado del pago (`succeeded`, `failed`, `pending`) | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| tenant_id | UUID | Identificador del tenant |
+| previous_plan | string | Plan anterior |
+| new_plan | string | Plan activado |
+| features_activated | array[string] | Lista de features añadidas |
+| activated_at | datetime | Timestamp de activación |
+| email_sent | boolean | Si el email de confirmación fue enviado |
+| event | string | `features_activated` |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

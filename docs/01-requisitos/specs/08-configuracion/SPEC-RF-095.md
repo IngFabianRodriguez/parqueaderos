@@ -56,3 +56,27 @@ El sistema debe permitir al `tenant_admin` definir y gestionar políticas de blo
 5. Las notificaciones previas al bloqueo se envían con la anticipación configurada.
 6. El desbloqueo automático por pago funciona según la configuración.
 7. Un vehículo bloqueado no puede registrar entradas ni salidas.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `block_trigger` (string): Tipo de trigger — `days_overdue`, `amount_overdue`, `combined`.
+- `days_overdue_threshold` (int): Días de mora para bloquear.
+- `amount_overdue_threshold` (decimal): Monto mínimo pendiente para bloquear.
+- `applies_to` (string): `all_vehicles`, `registered_only`, `unregistered_only`.
+- `grace_period_hours` (int): Horas de gracia antes del bloqueo.
+- `auto_unlock_on_payment` (boolean): Si se desbloquea al pagar.
+- `partial_payment_unlocks` (boolean): Si un pago parcial desbloquea.
+- `auto_unlock_after_days` (int): Días para desbloqueo automático (0 = nunca).
+- `notification_before_block` (boolean): Si se envía notificación previa.
+- `notification_hours_before` (int): Horas de anticipación para la notificación.
+- `active` (boolean): Si la política está activa.
+- `priority` (int): Prioridad de la política.
+
+## Datos de Salida
+- `block_policies.id` (UUID): ID de la política creada.
+- `block_policies.tenant_id`, `block_trigger`, `days_overdue_threshold`, `amount_overdue_threshold` (mixed): Criterios de bloqueo.
+- `block_policies.applies_to`, `grace_period_hours`, `auto_unlock_on_payment`, `partial_payment_unlocks` (mixed): Configuración.
+- `block_policies.auto_unlock_after_days`, `notification_before_block`, `notification_hours_before` (mixed): Desbloqueo y notificación.
+- `block_policies.active`, `priority` (mixed): Estado y prioridad.
+- `vehicles.status` (string): Estado actualizado del vehículo — `active`, `pending_payment`, `blocked`, `temporarily_unblocked`.
+- Evento: `vehicle_blocked` o `vehicle_unblocked` publicado.

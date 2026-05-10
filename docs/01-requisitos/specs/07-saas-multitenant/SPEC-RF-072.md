@@ -46,3 +46,15 @@ El sistema debe soportar MFA (Time-based One-Time Password) para todos los usuar
 6. El admin puede resetear el MFA de cualquier usuario de su organización.
 7. Se generan 8 códigos de backup cuando se activa MFA.
 8. El secreto TOTP se cifra con AES-256-GCM antes de almacenarse.
+
+## Datos de Entrada
+- **email** — Email del usuario que activa MFA (string, required)
+- **password** — Password actual del usuario (string, required, para verificación)
+- **totp_code** — Código TOTP de 6 dígitos generado por la app (string, required, para verificación inicial)
+
+## Datos de Salida
+- **mfa_enabled** — Booleano indicando si MFA está activo (boolean)
+- **mfa_secret** — Secreto TOTP cifrado almacenado en base de datos (string encrypted)
+- **backup_codes** — Array de 8 códigos de backup (string[])
+- **qr_code** — URL data del QR code para escanear (data URI)
+- **Respuesta** — 200 OK con `{ mfa_enabled: true, backup_codes: [...] }`

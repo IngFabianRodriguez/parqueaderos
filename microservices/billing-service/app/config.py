@@ -1,18 +1,12 @@
 """Application configuration from environment variables."""
 
 from typing import Literal
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from dataclasses import dataclass, field
 
 
-class Settings(BaseSettings):
+@dataclass
+class Settings:
     """Application settings loaded from environment variables."""
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
 
     app_env: Literal["development", "production", "testing"] = "development"
     service_name: str = "billing-service"

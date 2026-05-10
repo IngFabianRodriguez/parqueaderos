@@ -85,5 +85,26 @@ El sistema debe permitir que cada tenant genere una o múltiples API keys desde 
 - `POST /api/v1/api-keys/{key_id}/rotate` — Rotar key
 - `GET /api/v1/api-keys/{key_id}/usage` — Ver logs de uso
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| name | string | Nombre descriptivo de la API key (ej: "App iOS Production") | Sí |
+| scopes | array[string] | Lista de scopes permitidos (ej: `["disponibilidad:read", "reservas:write"]`) | Sí |
+| expires_at | datetime | Fecha de expiración opcional (null = nunca expira) | No |
+| ip_whitelist | array[string] | Lista de IPs permitidas opcional (null = cualquier IP) | No |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | UUID | Identificador único de la API key |
+| name | string | Nombre descriptivo asignado |
+| key_prefix | string | Primeros 8 caracteres de la key (`pk_live_xxx...`) |
+| key_full | string | API key completa (solo se muestra una vez al crear) |
+| scopes | array[string] | Scopes asignados |
+| created_at | datetime | Timestamp de creación |
+| expires_at | datetime | Fecha de expiración (null si no expira) |
+| last_used_at | datetime | Último uso (null si nunca se usó) |
+| status | string | `active`, `revoked`, `expired` |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

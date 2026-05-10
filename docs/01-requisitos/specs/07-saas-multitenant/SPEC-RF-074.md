@@ -42,3 +42,14 @@ El sistema debe permitir que el `tenant_admin` configure qué sedes puede accede
 5. Toda operación filtra automáticamente por las sedes asignadas.
 6. El intento de acceso a una sede no autorizada retorna 403 Forbidden.
 7. Los cambios de asignación se registran en `audit_log`.
+
+## Datos de Entrada
+- **user_id** — ID del usuario al que se le asignan sedes (UUID, required)
+- **site_ids** — Array de IDs de sedes permitidas (UUID[], puede estar vacío)
+- **grant_all_sites** — Booleano que indica si el usuario tiene acceso a todas las sedes (boolean, default: false)
+- **performed_by** — ID del admin que realiza la asignación (UUID, required, implicit from session)
+
+## Datos de Salida
+- **user_site_access** — Tabla de asignaciones de sitios por usuario actualizada
+- **audit_log** — Entrada con `action = site_access_updated`, `user_id`, `site_ids[]`, `performed_by`, `timestamp`
+- **Respuesta** — 200 OK con `{ user_id, allowed_sites: [...], all_sites_access: boolean }`

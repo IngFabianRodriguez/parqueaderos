@@ -38,3 +38,16 @@ El sistema debe bloquear una cuenta después de 5 intentos fallidos consecutivos
 5. El `tenant_admin` puede desbloquear manualmente cualquier usuario.
 6. Los intentos fallidos se registran para auditoría (IP, timestamp, user agent).
 7. Si el tenant tiene MFA obligatorio, el contador de intentos aplica al primer factor.
+
+## Datos de Entrada
+- **email** — Email del usuario que intenta hacer login (string, required)
+- **password** — Password proporcionado por el usuario (string, required)
+- **ip_address** — Dirección IP del cliente (string, auto-capturada)
+- **user_agent** — User agent del navegador/cliente (string, auto-capturada)
+
+## Datos de Salida
+- **failed_login_attempts** — Contador de intentos fallidos actualizado (integer)
+- **locked_until** — Timestamp hasta el cual la cuenta está bloqueada (timestamp, null si no está bloqueado)
+- **status** — Estado de la cuenta: `active`, `blocked` (enum)
+- **audit_log** — Entrada con `event_type = login_failed`, `ip_address`, `timestamp`, `failure_reason`
+- **Respuesta** — 401 Unauthorized o 423 Locked según corresponda

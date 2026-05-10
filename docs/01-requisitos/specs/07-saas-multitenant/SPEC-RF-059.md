@@ -75,5 +75,35 @@ El sistema debe presentar un wizard de onboarding que guíe al nuevo tenant a tr
 - `POST /api/v1/tenants/{tenant_id}/sedes` — Crear primera sede
 - `POST /api/v1/tenants/{tenant_id}/zonas` — Crear zonas
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| step | integer | Número del paso (1-6) | Sí |
+| tenant_id | UUID | Identificador del tenant | Sí |
+| company_name | string | Nombre de la empresa | Sí (paso 1) |
+| nit | string | NIT de la empresa | Sí (paso 1) |
+| address | string | Dirección de la empresa | Sí (paso 1) |
+| city | string | Ciudad de la empresa | Sí (paso 1) |
+| sector | string | Sector/industria | No (paso 1) |
+| sede_name | string | Nombre de la primera sede | Sí (paso 2) |
+| sede_address | string | Dirección de la sede | Sí (paso 2) |
+| operation_mode | string | `iot` o `manual` | Sí (paso 2) |
+| template_id | string | ID del template seleccionado | Sí (paso 3) |
+| tariff_name | string | Nombre de la tarifa inicial | Sí (paso 5) |
+| tariff_type | string | `por_hora`, `nocturna`, `mensual`, `fraccion` | Sí (paso 5) |
+| tariff_price | decimal | Precio de la tarifa | Sí (paso 5) |
+| invited_emails | array[string] | Emails de usuarios a invitar (máx 3) | No (paso 6) |
+| invited_roles | array[string] | Roles de los invitados (`manager`, `operador`) | No (paso 6) |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| step | integer | Paso completado |
+| progress | object | Resumen del progreso: `completed_steps`, `current_step`, `percent_complete` |
+| tenant_id | UUID | Identificador del tenant |
+| sede_id | UUID | ID de la sede creada (disponible después paso 2) |
+| onboarding_status | string | `in_progress`, `completed`, `pending` |
+| completed_at | datetime | Timestamp de finalización (null si no completado) |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

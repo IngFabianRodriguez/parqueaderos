@@ -1,31 +1,33 @@
-"""OpenTelemetry tracing setup."""
-
+"""OpenTelemetry tracing setup — graceful fallback when OTel not available."""
 import logging
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-
-from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 def setup_tracing():
-    """Configure OpenTelemetry tracing."""
-    if not settings.otel_enabled:
-        logger.info("OpenTelemetry tracing disabled")
+    """Configure OpenTelemetry tracing with graceful fallback."""
+    try:
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.sdk.resources import Resource
+        from app.config import settings
+    except ImportError:
+        logger.debug("OpenTelemetry not installed — tracing disabled")
         return
 
-    resource = Resource.create({SERVICE_NAME: settings.otel_service_name})
-    provider = TracerProvider(resource=resource)
+    if not getattr(settings, 'otel_enabled', False):
+        logger.info("OpenTelemetry tracing disabled via config")
+        return
 
     try:
-        exporter = OTLPSpanExporter(endpoint=settings.otel_exporter_otlp_endpoint, insecure=True)
-        processor = BatchSpanProcessor(exporter)
+        resource = Resource.create({"service.name": getattr(settings, 'otel_service_name', 'auth-service')})
+        provider = TracerProvider(resource=resource)
+        processor = BatchSpanProcessor()
         provider.add_span_processor(processor)
+        # Install FastAPI instrumentation if available
+        try:
+            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        except ImportError:
+            pass
     except Exception as e:
-        logger.warning(f"Failed to setup OTLP exporter: {e}")
-
-    provider.add_span_processor(BatchSpanProcessor())
+        logger.warning(f"Failed to setup OpenTelemetry tracing: {e}")

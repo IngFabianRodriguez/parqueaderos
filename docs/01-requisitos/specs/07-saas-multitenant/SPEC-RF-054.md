@@ -53,6 +53,23 @@ El sistema debe permitir que el tenant admin revoque una API key existente (inut
 ## Headers Injectados (del COMP-001)
 - X-User-Id, X-Rol, X-Tenant-Id, X-Sede-Id, X-Trace-ID, X-Request-Timestamp
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| key_id | UUID | Identificador de la key a revocar/rotar | Sí |
+| reason | string | Motivo de revocación (audit) | No |
+| confirmation | boolean | Confirmación explícita del admin | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | UUID | Identificador de la key |
+| status | string | `active`, `revoked` |
+| revoked_at | datetime | Timestamp de revocación (null si no revocada) |
+| new_key_id | UUID | ID de la nueva key generada (solo en rotación) |
+| new_key_full | string | Nueva API key completa (solo se muestra una vez) |
+| event | string | Tipo de evento: `api_key_revoked` o `api_key_rotated` |
+
 ## Criterios de Aceptación
 1. La revocación de una key hace que cualquier request con esa key retorne 401 en menos de 1 segundo
 2. La rotación crea una nueva key funcional con los mismos scopes que la anterior

@@ -60,5 +60,24 @@ El sistema debe enviar un código OTP (One-Time Password) de 6 dígitos al email
 - `POST /api/v1/auth/resend-otp` — Reenviar OTP
 - `GET /api/v1/auth/verification-status` — Consultar si el email ya está verificado
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| user_id | UUID | Identificador del usuario | Sí |
+| otp | string | Código de 6 dígitos | Sí (verify-email) |
+| email | string | Email del usuario (para reenvío) | Sí (resend-otp) |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| verified | boolean | `true` si el email fue verificado exitosamente |
+| user_id | UUID | Identificador del usuario |
+| email_verified_at | datetime | Timestamp de verificación (null si no verificado) |
+| status | string | `pending_verification`, `active`, `suspended` |
+| attempts_remaining | integer | Intentos restantes (máx 3) |
+| expires_at | datetime | Cuándo expira el OTP actual |
+| redirect_url | string | URL a la que redirigir después de verificación (wizard de onboarding) |
+| event | string | `email_verified` (solo si verificación exitosa) |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

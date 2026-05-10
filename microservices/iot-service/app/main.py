@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from prometheus_client import Counter, Histogram, generate_metrics
+from prometheus_client import Counter, Histogram
 
 from app.api.v1.router import router as api_v1_router
 from app.config import get_settings
@@ -91,7 +91,8 @@ async def ready():
     try:
         engine = get_engine()
         async with engine.connect() as conn:
-            await conn.execute("SELECT 1")
+            from sqlalchemy import text
+            await conn.execute(text("SELECT 1"))
         return {"status": "ready", "database": "connected"}
     except Exception as e:
         return JSONResponse({"status": "not ready", "database": str(e)}, status_code=503)

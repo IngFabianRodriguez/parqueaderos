@@ -27,20 +27,24 @@ def test_validate_token_missing_user_id():
     assert "Missing X-User-Id header" in exc_info.value.detail
 
 
-def test_check_permission_admin():
-    """Test check_permission for admin role."""
+def test_check_permission_admin_tenant():
+    """Test check_permission for admin_tenant role."""
     from app.core.security import check_permission
 
-    assert check_permission("admin", "admin") is True
-    assert check_permission("admin", "operador") is True
-    assert check_permission("admin", "cliente") is True
+    assert check_permission("admin_tenant", "superadmin") is False
+    assert check_permission("admin_tenant", "admin_tenant") is True
+    assert check_permission("admin_tenant", "supervisor") is True
+    assert check_permission("admin_tenant", "operador") is True
+    assert check_permission("admin_tenant", "cliente") is True
 
 
 def test_check_permission_operador():
     """Test check_permission for operador role."""
     from app.core.security import check_permission
 
-    assert check_permission("operador", "admin") is False
+    assert check_permission("operador", "superadmin") is False
+    assert check_permission("operador", "admin_tenant") is False
+    assert check_permission("operador", "supervisor") is False
     assert check_permission("operador", "operador") is True
     assert check_permission("operador", "cliente") is True
 
@@ -49,9 +53,42 @@ def test_check_permission_cliente():
     """Test check_permission for cliente role."""
     from app.core.security import check_permission
 
-    assert check_permission("cliente", "admin") is False
+    assert check_permission("cliente", "superadmin") is False
+    assert check_permission("cliente", "admin_tenant") is False
+    assert check_permission("cliente", "supervisor") is False
     assert check_permission("cliente", "operador") is False
     assert check_permission("cliente", "cliente") is True
+
+
+def test_check_permission_superadmin():
+    """Test check_permission for superadmin role (highest level)."""
+    from app.core.security import check_permission
+
+    assert check_permission("superadmin", "superadmin") is True
+    assert check_permission("superadmin", "admin_tenant") is True
+    assert check_permission("superadmin", "supervisor") is True
+    assert check_permission("superadmin", "operador") is True
+    assert check_permission("superadmin", "cliente") is True
+
+
+def test_is_admin():
+    """Test is_admin helper function."""
+    from app.core.security import is_admin
+
+    assert is_admin("superadmin") is True
+    assert is_admin("admin_tenant") is True
+    assert is_admin("supervisor") is False
+    assert is_admin("operador") is False
+    assert is_admin("cliente") is False
+
+
+def test_require_role():
+    """Test require_role helper function."""
+    from app.core.security import require_role
+
+    assert require_role("admin_tenant", ["superadmin", "admin_tenant"]) is True
+    assert require_role("operador", ["superadmin", "admin_tenant"]) is False
+    assert require_role("superadmin", ["superadmin"]) is True
 
 
 class TestAuthService:

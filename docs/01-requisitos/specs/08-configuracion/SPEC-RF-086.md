@@ -53,3 +53,18 @@ El sistema viene con categorías por defecto:
 4. El sistema deniega ingresos si la capacidad de una categoría está llena.
 5. Las categorías personalizadas se pueden crear además de las predefinidas.
 6. Las categorías se usan para filtrar tarifas (RF-085).
+
+## Datos de Entrada
+- `site_id` (UUID): Identificador de la sede.
+- `category_code` (string): Código de la categoría (ej: car, motorcycle, truck).
+- `enabled` (boolean): Si la categoría está habilitada para la sede.
+- `max_capacity` (int, nullable): Número máximo de espacios (null = ilimitado).
+- `requires_permission` (boolean): Si necesita registro previo.
+- `allowed_vehicle_types` (array[string]): Tipos específicos de vehículos.
+- `category_name`, `description`, `icon` (string, opcional): Datos de categoría personalizada.
+
+## Datos de Salida
+- `site_vehicle_categories.site_id`, `category_code`, `enabled`, `max_capacity` (mixed): Configuración almacenada.
+- `site_vehicle_categories.requires_permission` (boolean): Valor almacenado.
+- `vehicle_categories.id` (UUID): ID de la categoría personalizada creada.
+- Evento: `VEHICLE_CATEGORY_UPDATED` publicado tras el guardado.

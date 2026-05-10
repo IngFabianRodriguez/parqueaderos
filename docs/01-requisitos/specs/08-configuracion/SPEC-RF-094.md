@@ -52,3 +52,29 @@ El sistema debe permitir al `tenant_admin` crear, modificar y desactivar descuen
 6. El orden de aplicación cuando hay múltiples promociones (prioridad) es correcto.
 7. Los usos se registran para auditoría y reporting.
 8. Las promociones pueden ser combinables o excluyentes.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `name`, `description` (string): Nombre y descripción de la promoción.
+- `code` (string, nullable): Código de redención (null = automática).
+- `discount_type` (string): `percentage`, `fixed_amount`, `free_time`, `free_exit`.
+- `discount_value` (decimal): Valor del descuento.
+- `min_purchase_amount` (decimal, nullable): Monto mínimo de compra.
+- `max_discount_amount` (decimal, nullable): Tope de descuento (para percentage).
+- `applicable_vehicle_types`, `applicable_zones` (array[string], nullable): Condiciones de aplicación.
+- `valid_from`, `valid_until` (datetime): Período de validez.
+- `max_total_uses`, `max_uses_per_user` (int, nullable): Límites de uso.
+- `days_of_week` (array[int], opcional): Días de aplicación [0-6].
+- `time_restriction` (JSON, opcional): `{start_time, end_time}` para limitar horario.
+- `stackable` (boolean): Si se puede combinar con otras promociones.
+- `priority` (int): Prioridad de aplicación (mayor = primero).
+- `is_active` (boolean): Estado de la promoción.
+
+## Datos de Salida
+- `promotions.id` (UUID): ID de la promoción creada.
+- `promotions.tenant_id`, `name`, `code`, `discount_type`, `discount_value` (mixed): Datos almacenados.
+- `promotions.min_purchase_amount`, `max_discount_amount`, `valid_from`, `valid_until` (mixed): Condiciones y vigencia.
+- `promotions.max_total_uses`, `max_uses_per_user`, `stackable`, `priority`, `is_active` (mixed): Límites y configuración.
+- `promotion_redemptions.id` (UUID): ID de cada redención registrada.
+- `promotion_redemptions.promotion_id`, `user_id`, `vehicle_id`, `invoice_id`, `redeemed_at` (mixed): Registro de uso.
+- Evento: `PROMOTION_CREATED`, `PROMOTION_UPDATED` o `PROMOTION_REDEEMED` publicado.

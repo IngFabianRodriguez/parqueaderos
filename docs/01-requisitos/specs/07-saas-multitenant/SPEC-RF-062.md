@@ -63,5 +63,30 @@ Cada template se muestra como:
 - `GET /api/v1/templates/sede` — Listar templates de sede disponibles
 - `POST /api/v1/sedes/{sede_id}/apply-template` — Aplicar un template a la sede
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| template_id | string | Identificador del template a aplicar (ej: `profesional`, `corporativo`) | Sí |
+| sede_id | UUID | Identificador de la sede donde aplicar el template | Sí |
+| tenant_id | UUID | Identificador del tenant (para validar límites del plan) | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| template_id | string | ID del template aplicado |
+| template_name | string | Nombre del template (ej: "Profesional") |
+| zones_created | array[object] | Lista de zonas creadas |
+| zones_created[].id | UUID | ID de la zona creada |
+| zones_created[].name | string | Nombre de la zona |
+| zones_created[].spaces_count | integer | Cantidad de espacios en esta zona |
+| total_spaces_created | integer | Total de espacios creados |
+| spaces | array[object] | Lista de espacios creados con numeración |
+| spaces[].id | UUID | ID del espacio |
+| spaces[].zone_id | UUID | Zona a la que pertenece |
+| spaces[].code | string | Código del espacio (ej: "A-01", "B-03") |
+| spaces[].type | string | Tipo de espacio (ej: `cubierta`, `descubierto`, `vip`) |
+| event | string | `template_applied` |
+| warning | string | Warning si el template excede límites del plan (null si no hay) |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

@@ -59,5 +59,28 @@ El sistema debe registrar el timestamp del último uso de cada API key y mantene
 - `GET /api/v1/api-keys/{key_id}/usage` — Ver resumen de uso y logs
 - `GET /api/v1/api-keys/{key_id}/logs` — Ver logs detallados con paginación
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| key_id | UUID | Identificador de la API key a consultar | Sí |
+| page | integer | Número de página para logs (default: 1) | No |
+| limit | integer | Resultados por página (default: 100, max: 500) | No |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| key_id | UUID | Identificador de la key consultada |
+| total_requests | integer | Total de requests realizados con esta key |
+| last_used_at | datetime | Timestamp del último request |
+| requests_24h | integer | Requests en las últimas 24 horas |
+| logs | array[object] | Lista de requests recientes |
+| logs[].timestamp | datetime | Momento del request |
+| logs[].method | string | HTTP method (GET, POST, etc.) |
+| logs[].path | string | Endpoint solicitado |
+| logs[].status_code | integer | Código de respuesta HTTP |
+| logs[].response_time_ms | integer | Tiempo de respuesta en milisegundos |
+| logs[].ip_address | string | IP origen del request |
+| pagination | object | Info de paginación: `page`, `limit`, `total_pages`, `total_count` |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

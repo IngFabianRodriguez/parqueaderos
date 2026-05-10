@@ -40,3 +40,21 @@ El sistema debe mantener un historial de cambios (audit trail) para todos los re
 5. Un admin solo ve el historial de los registros de su tenant.
 6. Los valores se almacenan como JSON para flexibilidad.
 7. El `superadmin` puede ver el historial de cualquier tenant.
+
+## Datos de Entrada
+- **record_type** — Tipo de registro maestro (enum: `site`, `rate_plan`, `vehicle_category`, `user`, `role`, `payment_method`, required)
+- **record_id** — ID del registro que fue modificado (UUID, required)
+- **operation** — Tipo de operación (enum: `CREATE`, `UPDATE`, `DELETE`, required)
+- **before_values** — Estado del registro antes del cambio (JSON object, null si es CREATE)
+- **after_values** — Estado del registro después del cambio (JSON object, null si es DELETE)
+- **user_id** — ID del usuario que realizó el cambio (UUID, required)
+- **tenant_id** — ID del tenant (UUID, required, auto del contexto)
+- **timestamp** — Momento en que se realizó el cambio (ISO datetime, auto-generado)
+
+## Datos de Salida
+- **master_record_history** — Tabla con historial inmutable de cambios:
+  - `history_id` (UUID)
+  - `record_type`, `record_id`, `operation`
+  - `before_values` (JSON), `after_values` (JSON)
+  - `user_id`, `tenant_id`, `timestamp`
+- **Respuesta al consultar** — Timeline de cambios para un registro específico

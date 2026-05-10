@@ -43,3 +43,22 @@ El sistema debe mantener un log de auditoría de todas las operaciones relevante
 5. Los eventos se retienen por 2 años (configurable).
 6. Los datos de auditoría son específicos por tenant: un admin solo ve los de su tenant.
 7. El `superadmin` puede ver logs de cualquier tenant.
+
+## Datos de Entrada
+- **user_id** — ID del usuario que realizó la acción (UUID, required)
+- **tenant_id** — ID del tenant (UUID, required, auto del contexto)
+- **action** — Tipo de acción realizada (string, required): `login`, `logout`, `user_created`, etc.
+- **resource_type** — Tipo de recurso afectado (string, required): `user`, `site`, `rate_plan`, etc.
+- **resource_id** — ID del recurso afectado (UUID, required)
+- **ip_address** — Dirección IP del cliente (string, auto-capturada)
+- **user_agent** — User agent del cliente (string, auto-capturada)
+- **request_id** — ID de la request para trazabilidad (UUID, auto-generado)
+- **details** — Detalles adicionales de la acción (JSON object, optional)
+
+## Datos de Salida
+- **audit_log** — Registro en tabla `audit_log` (append-only):
+  - `event_id` (UUID)
+  - `timestamp` (ISO datetime)
+  - `user_id`, `tenant_id`, `action`, `resource_type`, `resource_id`
+  - `ip_address`, `user_agent`, `request_id`, `details`
+- **Respuesta al consultar** — Array paginado de eventos con filtros aplicados

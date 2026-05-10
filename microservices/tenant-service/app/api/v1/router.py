@@ -10,7 +10,6 @@ from app.schemas.tenant import (
     TenantUpdate,
     TenantListResponse,
     TenantConfigGet,
-    TenantConfigSet,
     TenantUsageResponse,
     PlanEnum,
 )

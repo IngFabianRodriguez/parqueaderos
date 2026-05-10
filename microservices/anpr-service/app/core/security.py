@@ -1,20 +1,23 @@
-"""JWT / security helpers — ANPR Service."""
+"""JWT / security helpers — ANPR Service. Pure Python, no pydantic."""
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from pydantic import BaseModel
 
 from app.config import get_settings
 
-security = HTTPBearer()
 settings = get_settings()
+security = HTTPBearer()
 
 
-class TokenData(BaseModel):
+@dataclass
+class TokenData:
     """Decoded JWT payload from API Gateway."""
-
     sub: str
     tenant_id: str
     role: str | None = None
@@ -29,7 +32,11 @@ def decode_token(token: str) -> TokenData:
             algorithms=[settings.JWT_ALGORITHM],
             audience="anpr-service",
         )
-        return TokenData(**payload)
+        return TokenData(
+            sub=payload.get("sub", ""),
+            tenant_id=payload.get("tenant_id", ""),
+            role=payload.get("role"),
+        )
     except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -43,3 +50,8 @@ async def get_current_tenant(
 ) -> TokenData:
     """Dependency: extract & validate tenant from JWT Bearer."""
     return decode_token(credentials.credentials)
+
+
+def tenant_id_from_token(token_data: TokenData) -> uuid.UUID:
+    """Extract tenant_id as UUID from token data."""
+    return uuid.UUID(token_data.tenant_id)

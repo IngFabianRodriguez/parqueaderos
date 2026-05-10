@@ -56,3 +56,24 @@ El sistema debe permitir al `tenant_admin` configurar reglas de tarifación comp
 5. Las reglas tienen período de vigencia y se auto-desactivan al expirar.
 6. El sistema soporta múltiples zonas con diferentes tarifas en el mismo tenant.
 7. Los cambios en reglas no afectan facturas ya emitidas.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `zone_id` (UUID, nullable): Zona a la que aplica (null = todas).
+- `vehicle_type` (string): Tipo de vehículo — `car`, `motorcycle`, `truck`, `all`.
+- `base_rate` (decimal): Tarifa base.
+- `time_fraction_minutes` (int): Fracción de tiempo en minutos (ej: 15).
+- `fraction_rate` (decimal): Tarifa por fracción.
+- `minimum_charge` (decimal): Costo mínimo por estadía.
+- `has_daily_cap`, `daily_cap_amount` (boolean, decimal): Tope diario opcional.
+- `has_monthly_cap`, `monthly_cap_amount` (boolean, decimal): Tope mensual opcional.
+- `special_rates` (array[JSON]): Tarifas especiales — `special_type`, `multiplier`, `fixed_amount`, `date_pattern`, `time_pattern`, `day_of_week`.
+- `effective_from`, `effective_until` (datetime): Período de vigencia.
+
+## Datos de Salida
+- `pricing_rules.id` (UUID): ID de la regla creada.
+- `pricing_rules.zone_id`, `vehicle_type`, `base_rate`, `time_fraction_minutes`, `fraction_rate` (mixed): Datos almacenados.
+- `pricing_rules.minimum_charge`, `has_daily_cap`, `daily_cap_amount`, `has_monthly_cap`, `monthly_cap_amount` (mixed): Topes configurados.
+- `pricing_rules.special_rates` (array): Tarifas especiales almacenadas.
+- `pricing_rules.effective_from`, `effective_until`, `is_active` (mixed): Vigencia y estado.
+- Evento: `PRICING_RULE_CREATED` o `PRICING_RULE_UPDATED` publicado.

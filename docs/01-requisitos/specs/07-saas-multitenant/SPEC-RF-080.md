@@ -44,3 +44,23 @@ Cada tenant define su política de retención via `data_retention_policies`:
 5. Cada aplicación de política genera un log en `data_retention_log`.
 6. El `superadmin` puede definir políticas por defecto para nuevos tenants.
 7. Los usuarios pueden solicitar eliminación de sus datos (right to erasure) manualmente.
+
+## Datos de Entrada
+- **tenant_id** — ID del tenant (UUID, required, del contexto)
+- **jurisdiction** — Jurisdicción legal para aplicar política (enum: `GDPR`, `LGPD`, `CCPA`, `Custom`, required)
+- **user_data_retention_days** — Días para retener datos de usuarios (integer, default: 730)
+- **vehicle_data_retention_days** — Días para retener datos de vehículos (integer, default: 365)
+- **transaction_data_retention_days** — Días para retener transacciones (integer, default: 2555)
+- **audit_log_retention_days** — Días para retener logs de auditoría (integer, default: 730)
+- **include_anonymization** — true = anonimizar, false = eliminar físicamente (boolean, default: true)
+
+## Datos de Salida
+- **data_retention_policies** — Tabla de políticas configuradas actualizada
+- **user_data** — Datos de usuarios anonimizados o eliminados según política
+- **vehicle_data** — Datos de vehículos anonimizados o eliminados según política
+- **transaction_data** — Transacciones archivadas (no eliminadas)
+- **data_retention_log** — Log de ejecuciones del job:
+  - `log_id` (UUID)
+  - `tenant_id`, `policy_id`, `records_processed`, `records_anonymized`, `records_deleted`
+  - `execution_timestamp`, `status`
+- **job_result** — Resumen de registros procesados por tipo

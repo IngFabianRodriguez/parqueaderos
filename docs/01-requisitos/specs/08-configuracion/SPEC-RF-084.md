@@ -46,3 +46,18 @@ El sistema debe permitir al `tenant_admin` definir horarios de operación para c
 4. Los vehículos no pueden ingresar fuera del horario activo; la salida siempre está permitida.
 5. Las fechas especiales (feriados) pueden tener horarios override.
 6. El sistema notifica si un vehículo está dentro del estacionamiento al momento del cierre.
+
+## Datos de Entrada
+- `site_id` (UUID): Identificador de la sede.
+- `schedule_name` (string): Nombre descriptivo del horario.
+- `days_of_week` (array[int]): Días activos [0-6], 0=Domingo.
+- `time_slots` (array[JSON]): Franjas horarias `[{start: "HH:MM", end: "HH:MM"}]`.
+- `is_active` (boolean): Si el schedule está activo.
+- `applies_to` (string): `all` o rango de fechas específico.
+- `schedule_id` (UUID, opcional): ID del schedule override para días especiales.
+
+## Datos de Salida
+- `site_schedules.id` (UUID): ID del schedule creado.
+- `site_schedules.site_id`, `schedule_name`, `days_of_week`, `time_slots` (mixed): Datos almacenados.
+- `site_special_days` (array): Fechas especiales con schedule override.
+- Evento: `SITE_SCHEDULE_UPDATED` publicado tras el guardado.

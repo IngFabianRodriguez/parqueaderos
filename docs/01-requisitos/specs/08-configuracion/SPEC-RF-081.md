@@ -38,3 +38,14 @@ El sistema debe permitir al `tenant_admin` seleccionar el tema visual del admin 
 3. La preferencia se guarda en la cuenta del usuario y persiste entre dispositivos.
 4. El `tenant_admin` puede establecer un tema por defecto para todo el tenant.
 5. Si el tema es `system`, se respetan las preferencias del OS del usuario.
+
+## Datos de Entrada
+- `theme` (string): Valor del tema seleccionado — `light`, `dark` o `system`.
+- `user_id` (UUID): Identificador del usuario que realiza el cambio.
+- `tenant_id` (UUID): Identificador del tenant (para tema por defecto).
+
+## Datos de Salida
+- `preferences.theme` (string): Tema almacenado en la preferencia del usuario.
+- `tenants.settings.theme` (string, opcional): Tema por defecto del tenant.
+- `theme_applied` (boolean): Confirmación de que el tema se aplicó correctamente.
+- Evento: `USER_PREFERENCES_UPDATED` publicado tras el guardado.

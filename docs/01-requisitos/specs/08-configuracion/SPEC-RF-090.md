@@ -58,3 +58,17 @@ Los roles predefinidos no pueden eliminarse, solo editarse.
 5. Los roles predefinidos no pueden eliminarse.
 6. El sistema verifica permisos en cada endpoint protected.
 7. El evento `ROLES_UPDATED` se publica cuando se modifican roles o permisos.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `role_name` (string): Nombre visible del rol.
+- `role_code` (string): Código único del rol dentro del tenant.
+- `description` (string): Descripción del rol.
+- `permissions` (array[string]): Lista de permisos asignados al rol.
+
+## Datos de Salida
+- `roles.id` (UUID): ID del rol creado.
+- `roles.tenant_id`, `role_name`, `role_code`, `description` (string): Datos almacenados.
+- `role_permissions.role_id`, `permission_code` (mixed): Permisos asignados.
+- `role_assignment_count` (int): Número de usuarios con este rol (para validación al eliminar).
+- Evento: `ROLES_UPDATED` publicado cuando se crean/modifican roles o permisos.

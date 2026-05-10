@@ -50,3 +50,20 @@ El sistema debe permitir al `tenant_admin` personalizar las plantillas de email,
 4. Las variables no reconocidas se detectan en la validación y se rechazan.
 5. Existe una plantilla por defecto en español (`es`) como fallback.
 6. Los cambios se reflejan en las siguientes notificaciones; las ya enviadas no se modifican.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `template_name` (string): Identificador interno (ej: entry_confirmation).
+- `channel` (string): Canal — `email`, `sms`, `push`, `in_app`.
+- `subject` (string, solo email): Asunto del mensaje (3-100 caracteres).
+- `body` (string): Cuerpo del mensaje con placeholders `{{variable}}` (máx 10,000 email, 1,600 SMS).
+- `is_active` (boolean): Si la plantilla está activa.
+- `footer` (string): Pie de página configurable.
+- `language_code` (string): Código ISO 639-1 para la plantilla.
+
+## Datos de Salida
+- `notification_templates.id` (UUID): ID de la plantilla.
+- `notification_templates.tenant_id`, `template_name`, `channel`, `subject`, `body` (mixed): Datos almacenados.
+- `notification_templates.is_active`, `footer`, `language_code` (mixed): Estado y configuración.
+- `template_validation` (object): Resultado de la validación — variables reconocidas, errores.
+- Evento: `NOTIFICATION_TEMPLATES_UPDATED` publicado tras el guardado.

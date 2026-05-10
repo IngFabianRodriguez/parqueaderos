@@ -46,3 +46,18 @@ El sistema debe permitir al `tenant_admin` configurar el idioma principal del si
 4. Cada usuario puede override el idioma con su preferencia personal.
 5. Los formatos de fecha y moneda respetan la configuración regional.
 6. Cambios en estos ajustes se reflejan en el siguiente login del usuario.
+
+## Datos de Entrada
+- `language_code` (string): Código ISO 639-1 (es, en, pt, fr, de).
+- `timezone` (string): Zona horaria IANA (ej: America/Bogota).
+- `date_format` (string): Formato de fecha — DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD.
+- `time_format` (string): Formato de hora — 12h o 24h.
+- `currency_format` (string): Código de moneda (COP, USD, BRL).
+- `tenant_id` (UUID): Identificador del tenant whose settings are being updated.
+
+## Datos de Salida
+- `tenants.settings.language_code` (string): Idioma almacenado en la configuración del tenant.
+- `tenants.settings.timezone` (string): Zona horaria almacenada.
+- `tenants.settings.date_format`, `time_format`, `currency_format` (string): Formatos almacenados.
+- `users.preferences.language_code` (string, opcional): Preferencia personal del usuario.
+- Evento: `TENANT_SETTINGS_UPDATED` publicado tras el guardado.

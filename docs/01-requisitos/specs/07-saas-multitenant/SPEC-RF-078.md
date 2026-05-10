@@ -43,3 +43,21 @@ Cada evento de autenticación genera un registro en `login_history`:
 5. Los datos se retienen por 1 año.
 6. Un admin solo ve el historial de usuarios de su tenant.
 7. El `superadmin` puede ver el historial de cualquier tenant.
+
+## Datos de Entrada
+- **user_id** — ID del usuario que inicia/termina sesión (UUID, required)
+- **tenant_id** — ID del tenant (UUID, required, auto del contexto)
+- **event_type** — Tipo de evento (enum: `login_success`, `login_failed`, `logout`, `mfa_challenge`, `session_expired`, required)
+- **ip_address** — Dirección IP del cliente (string, auto-capturada)
+- **user_agent** — User agent del cliente (string, auto-capturada)
+- **device_fingerprint** — Fingerprint del dispositivo si disponible (string, optional)
+- **login_method** — Método de login usado (enum: `password`, `sso`, `api_key`, required)
+- **failure_reason** — Razón del fallo si event_type es `login_failed` (enum: `invalid_password`, `user_not_found`, `account_locked`, `mfa_failed`, conditional)
+
+## Datos de Salida
+- **login_history** — Tabla con registro de accesos:
+  - `event_id` (UUID)
+  - `user_id`, `tenant_id`, `event_type`
+  - `ip_address`, `user_agent`, `device_fingerprint`
+  - `login_method`, `failure_reason`, `timestamp`
+- **Respuesta al consultar** — Lista paginada de eventos con filtros aplicados

@@ -81,5 +81,22 @@ El sistema debe definir rate limits por API key basados en el plan del tenant, a
 ## Endpoints
 - Todos los endpoints del API de ParkCore pasan por el middleware de rate limiting
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| Authorization header | string | `Bearer pk_live_xxx` con la API key | Sí |
+| tenant_plan | string | Plan del tenant (`Starter`, `Professional`, `Enterprise`, `Custom`) | Sí |
+| key_id | UUID | Identificador de la API key para tracking de uso | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| X-RateLimit-Limit | integer | Límite de requests en la ventana actual |
+| X-RateLimit-Remaining | integer | Requests restantes en la ventana actual |
+| X-RateLimit-Reset | integer | Timestamp Unix de fin de la ventana |
+| Retry-After | integer | Segundos hasta poder hacer nuevo request (solo en 429) |
+| status_code | integer | 200 si OK, 429 si rate limit excedido |
+| error | object | Objeto de error con `rate_limit_exceeded`, `message`, `limit`, `retry_after`, `plan`, `upgrade_url` |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

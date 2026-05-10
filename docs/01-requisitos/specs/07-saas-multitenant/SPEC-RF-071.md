@@ -39,3 +39,13 @@ El sistema debe permitir que el `tenant_admin` asigne, modifique y elimine roles
 3. Los cambios de rol se registran en `audit_log` con `performed_by` y `timestamp`.
 4. No se permite asignar roles más allá de los que el admin tiene.
 5. El `superadmin` puede modificar roles de cualquier usuario en cualquier tenant.
+
+## Datos de Entrada
+- **user_id** — ID del usuario al que se le asignan roles (UUID, required)
+- **roles** — Array de IDs de roles a asignar al usuario (UUID[], required)
+- **performed_by** — ID del admin que realiza la asignación (UUID, required, implicit from session)
+
+## Datos de Salida
+- **user_roles** — Tabla de asignaciones actualizada con los nuevos roles
+- **audit_log** — Entrada con `action = role_assigned | role_removed`, `user_id`, `roles[]`, `performed_by`, `timestamp`
+- **Respuesta** — 200 OK con `{ user_id, assigned_roles: [...] }`

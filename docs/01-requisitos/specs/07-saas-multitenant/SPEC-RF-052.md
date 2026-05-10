@@ -63,5 +63,18 @@ El sistema debe definir y aplicar scopes granulares sobre cada API key, de modo 
 ## Endpoints
 - Todos los endpoints del API de ParkCore declaran su scope en el router del API Gateway
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| Authorization header | string | `Bearer pk_live_xxx` con la API key | Sí |
+| scope_requerido | string | Scope necesario para el endpoint (ej: `reservas:write`) | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| request_autorizado | boolean | `true` si la key tiene el scope requerido |
+| error | object | Objeto de error con `code`, `required_scope`, `message` (solo si falla) |
+| status_code | integer | 200 si autorizado, 403 si scope insuficiente |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

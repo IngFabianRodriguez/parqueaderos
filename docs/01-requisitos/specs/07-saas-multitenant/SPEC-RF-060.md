@@ -54,5 +54,26 @@ El sistema debe enviar un email transaccional de bienvenida al usuario founder i
 ## Endpoints
 - Proceso batch triggered por `tenant_created`; no hay endpoint directo para el usuario
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| tenant_id | UUID | Identificador del tenant creado | Sí |
+| user_id | UUID | Identificador del usuario founder | Sí |
+| user_email | string | Email del usuario founder | Sí |
+| user_name | string | Nombre del usuario founder | Sí |
+| company_name | string | Nombre de la empresa del tenant | Sí |
+| verification_token | string | Token único para verificar email | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| email_id | string | ID del email enviado (para tracking) |
+| recipient | string | Email del destinatario |
+| subject | string | Asunto del email |
+| sent_at | datetime | Timestamp de envío |
+| status | string | `sent`, `bounced`, `failed` |
+| tracking_enabled | boolean | Si el tracking de apertura/clicks está activo |
+| event | string | `welcome_email_sent` |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

@@ -61,5 +61,22 @@ El sistema debe definir un mapa de feature flags asociadas a cada plan (Starter,
 - `GET /api/v1/tenants/{tenant_id}/features` — Obtener features activas del tenant
 - `GET /api/v1/plans` — Listar todos los planes y sus features (público)
 
+## Datos de Entrada
+| Campo | Tipo | Descripción | Requerido |
+|-------|------|-------------|-----------|
+| tenant_id | UUID | Identificador del tenant | Sí |
+
+## Datos de Salida
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| tenant_id | UUID | Identificador del tenant |
+| plan | string | Plan actual del tenant (`Starter`, `Professional`, `Enterprise`, `Custom`) |
+| features | array[object] | Lista de features activas |
+| features[].id | string | Identificador de la feature (ej: `multi_sede`, `bi_reportes`) |
+| features[].name | string | Nombre visible de la feature |
+| features[].enabled | boolean | `true` si está activa |
+| features[].limits | object | Límites específicos (ej: `max_sedes: 3`) |
+| cached_at | datetime | Timestamp de cuando se cacheó la respuesta |
+
 ## Health Check
 - `GET /health` → { "status": "ok" }

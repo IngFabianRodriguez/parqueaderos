@@ -56,3 +56,19 @@ El sistema debe permitir al `tenant_admin` habilitar y configurar los métodos d
 4. El método por defecto se muestra primero en la UI del operador.
 5. Solo los métodos habilitados están disponibles para procesar pagos.
 6. El sistema delega al PaymentProvider correcto según el método seleccionado.
+
+## Datos de Entrada
+- `site_id` (UUID): Identificador de la sede.
+- `payment_method` (string): Método — `cash`, `card`, `bank_transfer`, `digital_wallet`, `qr_pay`.
+- `enabled` (boolean): Si el método está habilitado.
+- `position` (int): Orden de prioridad en la UI del operador.
+- `config` (JSON): Configuración específica del método.
+- `minimum_amount`, `maximum_amount` (decimal, nullable): Límites de monto.
+- `is_default` (boolean): Si es el método sugerido por defecto.
+
+## Datos de Salida
+- `site_payment_methods.id` (UUID): ID del método configurado.
+- `site_payment_methods.site_id`, `payment_method`, `enabled`, `position` (mixed): Datos almacenados.
+- `site_payment_methods.config` (JSON): Configuración específica.
+- `site_payment_methods.minimum_amount`, `maximum_amount`, `is_default` (mixed): Límites y prioridad.
+- Evento: `PAYMENT_METHOD_UPDATED` publicado tras el guardado.

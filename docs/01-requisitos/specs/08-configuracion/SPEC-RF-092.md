@@ -49,3 +49,18 @@ El sistema debe permitir al `tenant_admin` configurar horarios programados para 
 5. Se puede definir múltiples schedules para el mismo tipo.
 6. Los cambios en la configuración se reflejan en el scheduler en < 60 segundos.
 7. Cada ejecución batch genera un registro en `notification_logs` con `batch_id` único.
+
+## Datos de Entrada
+- `tenant_id` (UUID): Identificador del tenant.
+- `notification_type` (string): Tipo — `daily_summary`, `payment_reminder`, `overdue_alert`, `occupancy_report`, `custom`.
+- `scheduled_time` (string): Hora local de envío (formato HH:MM).
+- `days_of_week` (array[int]): Días de la semana [0-6], 0=Domingo.
+- `timezone` (string, opcional): Zona horaria (por defecto: zona del tenant).
+- `enabled` (boolean): Si el schedule está activo.
+
+## Datos de Salida
+- `notification_schedules.id` (UUID): ID del schedule creado.
+- `notification_schedules.tenant_id`, `notification_type`, `scheduled_time`, `days_of_week` (mixed): Datos almacenados.
+- `notification_schedules.timezone`, `enabled` (mixed): Configuración de zona horaria y estado.
+- `next_execution_utc` (datetime): Próxima ejecución calculada en UTC.
+- `notification_logs.batch_id` (UUID): ID único de cada ejecución batch.

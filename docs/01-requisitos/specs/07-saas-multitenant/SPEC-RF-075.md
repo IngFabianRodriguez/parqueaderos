@@ -47,3 +47,25 @@ El sistema debe exponer un dashboard BI que muestre métricas clave en tiempo re
 5. El acceso está restringido a tenants Enterprise+ y roles con permisos de BI.
 6. Todos los valores monetarios se muestran en la moneda del tenant.
 7. Las tendencias muestran comparison vs período anterior.
+
+## Datos de Entrada
+- **tenant_id** — ID del tenant (UUID, required, extraído de sesión)
+- **date_range** — Rango de fechas: `today`, `yesterday`, `last_7_days`, `last_month`, `current_month`, `custom` (enum, default: `today`)
+- **start_date** — Fecha inicio para rango personalizado (ISO date, conditional)
+- **end_date** — Fecha fin para rango personalizado (ISO date, conditional)
+- **site_id** — Filtrar por sede específica (UUID, optional, null = todas)
+- **zone_id** — Filtrar por zona específica (UUID, optional)
+- **granularity** — Granularidad de datos: `hour`, `day`, `week`, `month` (enum, default: `day`)
+
+## Datos de Salida
+- **widgets** — Objeto con datos de cada widget del dashboard:
+  - `realtime_occupancy` — Porcentaje de ocupación actual y total de espacios
+  - `occupancy_trend` — Array de datos de ocupación últimas 24h (timestamp, percentage)
+  - `daily_revenue` — Ingresos del día y variación vs ayer (amount, variation_percentage)
+  - `revenue_by_site** — Array de ingresos por sede (site_id, site_name, amount)
+  - `transactions_per_hour** — Array de transacciones por hora (hour, count)
+  - `avg_stay_time** — Tiempo promedio de permanencia en minutos (number)
+  - `monthly_revenue** — Ingresos del mes y progreso vs meta (amount, progress_percentage)
+  - `top_spaces** — Top 5 espacios con mayor rotación (space_id, entries, revenue)
+- **filters_applied** — Objeto con los filtros utilizados
+- **last_updated** — Timestamp de última actualización de datos (ISO datetime)

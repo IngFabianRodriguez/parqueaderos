@@ -46,3 +46,22 @@ El sistema debe permitir al `tenant_admin` configurar los datos de su organizaci
 3. Los datos de la empresa aparecen en facturas, emails y reportes.
 4. Los cambios en configuración se reflejan en el siguiente documento generado.
 5. El `default_currency` se usa como referencia para nuevos sites si no se especifica.
+
+## Datos de Entrada
+- `company_name` (string): Nombre legal de la empresa.
+- `trading_name` (string): Nombre comercial.
+- `logo_url` (string): URL del logo almacenado en S3.
+- `tax_id` (string): Número de identificación fiscal (NIT, RFC, CNPJ).
+- `address` (JSON): Dirección completa — calle, ciudad, estado, código postal, país.
+- `phone`, `email`, `website` (string): Datos de contacto.
+- `support_contact` (string): Información de contacto de soporte.
+- `invoice_footer_text` (string): Texto adicional en el pie de factura.
+- `default_currency` (string): Moneda por defecto para transacciones.
+- `tenant_id` (UUID): Identificador del tenant.
+
+## Datos de Salida
+- `tenants.company_name`, `tenants.trading_name`, `tenants.logo_url`, `tenants.tax_id` (string): Datos almacenados.
+- `tenants.address` (JSON): Dirección almacenada.
+- `tenants.settings.contact_info` (JSON): Información de contacto.
+- `tenants.settings.default_currency` (string): Moneda por defecto.
+- Evento: `TENANT_SETTINGS_UPDATED` publicado tras el guardado.

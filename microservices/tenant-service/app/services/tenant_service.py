@@ -229,27 +229,21 @@ class TenantService:
         requesting_rol: str,
     ) -> TenantUsageResponse:
         """Get tenant usage statistics."""
-        from app.db.models import Tenant, Sede, TenantUser
+        from app.db.models import Tenant, TenantUser
         from sqlalchemy import select, func
         
         if str(tenant_id) != requesting_tenant_id and requesting_rol != "superadmin":
             raise PermissionError("Access denied")
-        
-        # Count sedes
-        sedes_count = await self.db.execute(
-            select(func.count()).select_from(Sede).where(Sede.tenant_id == tenant_id)
-        )
-        sedes_count = sedes_count.scalar() or 0
         
         # Count users
         users_count = await self.db.execute(
             select(func.count()).select_from(TenantUser).where(TenantUser.tenant_id == tenant_id)
         )
         users_count = users_count.scalar() or 0
-        
+
         return TenantUsageResponse(
             tenant_id=tenant_id,
-            sedes_count=sedes_count,
+            sedes_count=0,  # Sede is managed by sedes-service, not tenant-service
             users_count=users_count,
             api_calls_today=0,  # TODO: integrate with API gateway metrics
             active_sessions=0,   # TODO: integrate with Redis session store

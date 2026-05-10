@@ -53,3 +53,30 @@ El sistema debe permitir al `tenant_admin` configurar: (1) impuestos que se apli
 4. Los cupones tienen códigos únicos y controles de uso.
 5. Los impuestos se calculan sobre el subtotal después de aplicar descuentos.
 6. El evento `TAX_DISCOUNT_CONFIG_UPDATED` se publica tras cada cambio.
+
+## Datos de Entrada
+- `site_id` (UUID): Identificador de la sede.
+- **Impuestos:**
+  - `tax_name` (string): Nombre del impuesto (ej: "IVA 19%").
+  - `tax_type` (string): `percentage` o `fixed`.
+  - `tax_rate` (decimal): Porcentaje (0-100) o monto fijo.
+  - `applies_to` (string): `all`, `cash_only`, `card_only`.
+  - `is_default` (boolean): Si aplica automáticamente.
+  - `is_active` (boolean): Estado del impuesto.
+- **Descuentos:**
+  - `discount_name` (string): Nombre del descuento.
+  - `discount_type` (string): `percentage`, `fixed_amount`, `flat_rate`.
+  - `discount_value` (decimal): Valor del descuento.
+  - `target` (string): `all_vehicles`, `specific_category`, `subscribed_only`, `corporate_only`.
+  - `discount_trigger` (string): `none`, `time_based`, `duration_based`, `coupon_code`.
+  - `coupon_code` (string, opcional): Código de cupón.
+  - `max_uses` (int, nullable): Límite de usos.
+  - `valid_from`, `valid_until` (datetime): Período de validez.
+  - `is_active` (boolean): Estado del descuento.
+
+## Datos de Salida
+- `site_taxes.id` (UUID): ID del impuesto configurado.
+- `site_taxes.site_id`, `tax_name`, `tax_type`, `tax_rate`, `applies_to`, `is_default`, `is_active` (mixed): Datos almacenados.
+- `site_discounts.id` (UUID): ID del descuento configurado.
+- `site_discounts.site_id`, `discount_name`, `discount_type`, `discount_value`, `target`, `coupon_code`, `max_uses`, `valid_from`, `valid_until`, `is_active` (mixed): Datos almacenados.
+- Evento: `TAX_DISCOUNT_CONFIG_UPDATED` publicado tras el guardado.

@@ -52,3 +52,24 @@ El sistema debe permitir al `tenant_admin` crear y gestionar planes de tarifa po
 6. La tarifa mínima define el cobro mínimo por cualquier estadía.
 7. Los planes tienen período de validez (effective_from/until).
 8. Un vehículo siempre se cobra con el plan vigente al momento del ingreso.
+
+## Datos de Entrada
+- `site_id` (UUID): Identificador de la sede.
+- `plan_name` (string): Nombre del plan de tarifa.
+- `zone_id` (UUID, nullable): Zona a la que aplica (null = todas).
+- `applies_to_vehicle_types` (array[string]): Tipos de vehículo o `all`.
+- `schedule_id` (UUID): Horario de aplicación (RF-084).
+- `rate_type` (string): `fraction`, `hourly`, `flat` o `daily`.
+- `fraction_minutes`, `fraction_rate` (int): Configuración de fracción.
+- `hourly_rate` (decimal): Tarifa por hora.
+- `flat_rate` (decimal): Tarifa plana.
+- `daily_cap_amount` (decimal, nullable): Tope máximo diario.
+- `minimum_charge` (decimal): Tarifa mínima por estadía.
+- `effective_from`, `effective_until` (datetime): Período de validez.
+
+## Datos de Salida
+- `rate_plans.id` (UUID): ID del plan creado.
+- `rate_plans.site_id`, `plan_name`, `rate_type`, `fraction_minutes`, `fraction_rate` (mixed): Datos almacenados.
+- `rate_plans.hourly_rate`, `flat_rate`, `daily_cap_amount`, `minimum_charge` (decimal): Tarifas almacenadas.
+- `rate_plans.effective_from`, `effective_until` (datetime): Período de validez.
+- Evento: `RATE_PLAN_CREATED` o `RATE_PLAN_UPDATED` publicado.
